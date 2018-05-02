@@ -1,0 +1,1 @@
+bash train.sh output data 50000 10449
