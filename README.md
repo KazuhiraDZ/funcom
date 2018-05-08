@@ -9,3 +9,7 @@ A modified image-captioning model ([LemonATsu/Keras-Image-Caption](https://githu
 ### Baseline: Nematus
 folder: ./baseline-nematus
 Scripts for running [Nematus-tensorflow](https://github.com/EdinburghNLP/nematus/tree/tensorflow) on our data sets.
+
+### Evaluation toolkit
+folder: ./eval
+A script to calculate bleu scores
