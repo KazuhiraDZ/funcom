@@ -7,6 +7,8 @@ Notes:
 2) like the alpha version, **for now**, we use a subset from the training set as the valid set
 3) uses the same vocab size for tgt sequences as the alpha model: for tgt sequences, 10449
 4) different from the alpha model, for src sequences, we use 50k instead of all the words (too big for nematus..)
+5) **for testing**: gpu memory is often not large enough for testing the entire test set. Try something like:\
+```split -a 3 -d -l 300 data/test.src.txt data/test.src.split/test.src.part``` to split the test file into smaller pieces.
 
 Files:
 1) **prepdata.py**: preparing the data files for nematus (based on the files generated in [alpha/dataprep](https://github.com/mcmillco/funcom/alpha/dataprep))
