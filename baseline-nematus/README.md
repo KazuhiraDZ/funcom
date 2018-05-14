@@ -11,7 +11,7 @@ Notes:
 ```split -a 3 -d -l 300 data/test.src.txt data/test.src.split/test.src.part``` to split the test file into smaller pieces.
 
 Files:
-1) **prepdata.py**: preparing the data files for nematus (based on the files generated in [alpha/dataprep](https://github.com/mcmillco/funcom/alpha/dataprep))
+1) **prepdata.py**: preparing the data files for nematus (based on the files generated in [alpha/dataprep](https://github.com/mcmillco/funcom/tree/master/alpha/dataprep))
 2) **run.log**: the log of commands used for running the scripts
 3) **train.sh**: the script to run nematus ([nematus-tensorflow](https://github.com/EdinburghNLP/nematus/tree/tensorflow) is needed)
     * change nematus path if needed
