@@ -18,7 +18,7 @@ from model import fun_com_model
 from playground import load_embedding
 
 def print_seq(seq, seq_name, index_word):
-    print_str = seq_name + ' ' + print_seq_str(seq, seq_name, index_word)
+    print_str = seq_name + ' ' + print_seq_str(seq, index_word)
     print(print_str)
 
 def print_seq_str(seq, index_word):
