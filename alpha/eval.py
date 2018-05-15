@@ -18,10 +18,12 @@ from model import fun_com_model
 from playground import load_embedding
 
 import configparser, argparse
+from prediction import Prediction
 
 def print_seq(seq, seq_name, index_word):
     print_str = seq_name + ' ' + print_seq_str(seq, index_word)
     print(print_str)
+
 
 def print_seq_str(seq, index_word):
     print_str = ''
@@ -33,42 +35,6 @@ def print_seq_str(seq, index_word):
         
     return print_str
 
-## greedy search
-def greedy_search(predict, source_sequence, coms_vocabsize, max_caplen, sos, eos):
-    search_logger = logging.getLogger(__name__ + ': greedy_search')
-    
-    prediction = []
-    word_cnt = 0
-    pred = -1
-    vhist = np.zeros((1, coms_vocabsize))
-    
-    cur = sos
-    seq = np.zeros((max_caplen))
-    while True:
-        # predict a word
-        probslist = predict([np.asarray([source_sequence]),
-                             np.asarray(cur).reshape((-1, 1)),
-                             np.asarray([seq]),
-                             np.asarray(vhist)])
-        
-        probs = probslist[0]
-        pred = np.argmax(probs)
-        prediction.append(pred)
-        # maxprob = probs.item(pred)
-        # search_logger.info(str(word_cnt) + ': wordid#' + str(pred))
-
-        word_cnt += 1
-        if word_cnt >= max_caplen or pred == eos:
-            break
-
-        # prepare for the next iteration
-        seq = np.zeros((max_caplen))
-        seq[word_cnt-1] = 1
-        cur = pred # for next prediction
-        vhist[0, pred] = 1
-        # end prediction
-
-    return prediction
 
 def parse_config_var(config, var_name, var_default):
     var_val = var_default
@@ -103,24 +69,44 @@ def parse_config(configfile):
 def parse_args():
     parser = argparse.ArgumentParser(description='Run models to predict comments.')
     parser.add_argument('--config', nargs=1, help='the config file, see test.ini as an example', required=True)
+    parser.add_argument('--beamsearch', metavar='K', type=int, nargs=1, help='use beam search, and set K as beam width; if not used, run greedy search')
     parser.add_argument('model', nargs='+', help='a model\'s file path')
     args = parser.parse_args()
     modelpath = args.model[0]
     configfile = args.config[0]
+    beamsearch = -1
+        
     logger.info("input model: " + modelpath)
     logger.info("config file: " + configfile)
+    
+    if args.beamsearch:
+        beamsearch = args.beamsearch[0]
+        logger.info("beamsearch, k=" + str(beamsearch))
+    else:
+        logger.info("greedysearch")
+
     return {'modelpath':modelpath,
-            'configfile':configfile,}
+            'configfile':configfile,
+            'beamsearch':beamsearch,}
 
     
 if __name__ == '__main__':
     args = parse_args()
-    modelpath = args['modelpath']
-    config = parse_config(args['configfile'])
-    dataprep = config['dataprep']
-    embfile  = config['embfile']
-    outdir   = config['outdir']
-    timestr = time.strftime("%Y%m%d-%H%M%S")
+    modelpath  = args['modelpath']
+    beamwidth = args['beamsearch']
+
+    search = None
+    if beamwidth > 0:
+        search = Prediction('beam', {'beamwidth':beamwidth,}).search
+    else:
+        search = Prediction('greedy').search
+
+    
+    config     = parse_config(args['configfile'])
+    dataprep   = config['dataprep']
+    embfile    = config['embfile']
+    outdir     = config['outdir']
+    timestr    = time.strftime("%Y%m%d-%H%M%S")
     outputfile = {'srcfile':os.path.join(outdir, 'testsrc') + timestr + '.txt',
                   'reffile':os.path.join(outdir, 'testref') + timestr + '.txt',
                   'predict':os.path.join(outdir, 'predicts') + timestr + '.txt',}
@@ -205,15 +191,17 @@ if __name__ == '__main__':
 
     logger.info('model predicting ...')
     predlist = []
+    
     for i in range(len(datslist)):
         if sos == -1:
             sos = comslist[i][0]
-        
-        prediction = greedy_search(model.predict, datslist[i], coms_vocabsize, max_comlen, sos, eos)
+            
+        prediction = search(model.predict, datslist[i], coms_vocabsize, max_comlen, sos, eos)
         prediction_str = print_seq_str(prediction, index_word_com) + "\n"
         logger.info(str(i+1) + '/' + str(len(datslist)) + ' prediction: ' + prediction_str)
         predlist.append(prediction)
-        
+
+    
     logger.info('finished prediction. generated ' + str(len(predlist)) + ' sequences')
     prediction_str = "\n".join([print_seq_str(prediction, index_word_com) for prediction in predlist])
     print(prediction_str, file=open(outputfile['predict'], "w"))
