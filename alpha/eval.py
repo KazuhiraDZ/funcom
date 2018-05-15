@@ -34,7 +34,7 @@ def print_seq_str(seq, index_word):
     return print_str
 
 ## greedy search
-def greedy_search(predict, source_sequence, target_sequence, coms_vocabsize, max_caplen, sos, eos):
+def greedy_search(predict, source_sequence, coms_vocabsize, max_caplen, sos, eos):
     search_logger = logging.getLogger(__name__ + ': greedy_search')
     
     prediction = []
@@ -206,7 +206,10 @@ if __name__ == '__main__':
     logger.info('model predicting ...')
     predlist = []
     for i in range(len(datslist)):
-        prediction = greedy_search(model.predict, datslist[0], comslist[0], coms_vocabsize, max_comlen, sos, eos)
+        if sos == -1:
+            sos = comslist[i][0]
+        
+        prediction = greedy_search(model.predict, datslist[i], coms_vocabsize, max_comlen, sos, eos)
         predlist.append(prediction)
         
     logger.info('finished prediction. generated ' + str(len(predlist)) + ' sequences')
