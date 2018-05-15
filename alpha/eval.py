@@ -33,42 +33,42 @@ def print_seq_str(seq, index_word):
         
     return print_str
 
-def generate_batch(datslist_chunk, comslist_chunk, coms_vocabsize, max_caplen=50):
-    dats, curs, nxts, seqs, vhists = [], [], [], [], []
-    total_com_len = 0
+## greedy search
+def greedy_search(predict, source_sequence, coms_vocabsize, max_caplen, sos, eos):
+    search_logger = logging.getLogger(__name__ + ': greedy_search')
     
-    for idx in range(0, len(comslist_chunk)):
-        com = comslist_chunk[idx]
-        dat = datslist_chunk[idx]
-
-        com_len = len(com)
-        if(com_len == 0):
-            continue
-
-        com_len = min(com_len,max_caplen)
-        total_com_len += com_len
+    prediction = []
+    word_cnt = 0
+    pred = -1
+    vhist = np.zeros((1, coms_vocabsize))
+    
+    cur = sos
+    seq = np.zeros((max_caplen))
+    while True:
+        # predict a word
+        probslist = predict([np.asarray([source_sequence]),
+                             np.asarray(cur).reshape((-1, 1)),
+                             np.asarray([seq]),
+                             np.asarray(vhist)])
         
-        vhist = np.zeros((com_len-1, coms_vocabsize))
+        probs = probslist[0]
+        pred = np.argmax(probs)
+        prediction.append(pred)
+        # maxprob = probs.item(pred)
+        # search_logger.info(str(word_cnt) + ': wordid#' + str(pred))
 
-        for i in range(1, com_len):
-            seq = np.zeros((max_caplen))
-            nxt = np.zeros((coms_vocabsize))
-            nxt[com[i]] = 1
-            curs.append(com[i-1])
-            seq[i-1] = 1
-        
-            if i < len(com)-1 and i < max_caplen - 1:
-                vhist[i, :] = np.logical_or(vhist[i, :], vhist[i-1, :])
-                vhist[i, com[i-1]] = 1
-        
-            nxts.append(nxt)
-            dats.append(dat)
-            seqs.append(seq)
-        
-        vhists.extend(vhist)
+        word_cnt += 1
+        if word_cnt >= max_caplen or pred == eos:
+            break
 
-    logger.info('total com lens: ' + str(total_com_len))
-    return np.asarray(dats), np.asarray(curs).reshape((-1, 1)), np.asarray(nxts), np.asarray(seqs), np.asarray(vhists)
+        # prepare for the next iteration
+        seq = np.zeros((max_caplen))
+        seq[word_cnt-1] = 1
+        cur = pred # for next prediction
+        vhist[0, pred] = 1
+        # end prediction
+
+    return prediction
 
 def parse_config_var(config, var_name, var_default):
     var_val = var_default
@@ -156,28 +156,24 @@ if __name__ == '__main__':
     comslist, datslist = (list() for i in range(2))
     datslist_str, comslist_str = '', ''
 
-    # temporary workaround
-    # can't get all the test sequences in the memory (in generate_batch)
     cnt = 0
     for fid in sorted(alldata['coms_test_seqs'].keys()):
         cnt += 1
-        if cnt % 1000 == 0:
-            com = alldata['coms_test_seqs'][fid]
-            dat = alldata['dats_test_seqs'][fid]
-    
-            datslist_str += print_seq_str(dat, index_word_dat) + "\n"
-            comslist_str += print_seq_str(com, index_word_com) + "\n"
-            
-            com.append(1) # quick fix for the generate_batch which will ignore the last word of com.
-            comslist.append(com)
-            datslist.append(dat)
+        com = alldata['coms_test_seqs'][fid]
+        dat = alldata['dats_test_seqs'][fid]
+        
+        comslist.append(com)
+        datslist.append(dat)
 
+        datslist_str += print_seq_str(dat, index_word_dat) + "\n"
+        comslist_str += print_seq_str(com, index_word_com) + "\n"
+
+    
     print(datslist_str, file=open(outputfile['srcfile'], "w"))
     print(comslist_str, file=open(outputfile['reffile'], "w"))
     
     logger.info('loop cnt: ' + str(cnt) + ', coms cnt: ' + str(len(comslist)) + ', dats cnt: ' + str(len(datslist)))
-    dat, cur, nxt, seq, vhists = generate_batch(datslist, comslist, coms_vocabsize)
-
+    
     t_start = time.perf_counter()
     logger.info("loading pre-trained word embedding...")
     emb = load_embedding(embfile, dats_vocabsize, datstok)
@@ -195,27 +191,29 @@ if __name__ == '__main__':
     t_stop = time.perf_counter()
     logger.info("finished initializing the model: %.1f [sec]" % (t_stop-t_start))
     
+    try:
+        sos = comstok.word_index['<s>']
+    except:
+        logger.warning("cannot find <s> in the comment dictionary")
+        sos = -1
+
+    try:    
+        eos = comstok.word_index['</s>']
+    except:
+        logger.warning("cannot find </s> in the comment dictionary")
+        eos = 0
+
     logger.info('model predicting ...')
-    probslist = model.predict([dat, cur, seq, vhists])
-    logger.info('finished prediction. generated ' + str(len(probslist)) + ' sequences')
-
-    
-    pred_str = ''
-    com_cnt  = 0
-    word_cnt = 0
-    com_len  = min(len(comslist[com_cnt]), max_comlen)
-    
-    for i in range(0, len(probslist) - 1):
-        word_cnt += 1
-        if word_cnt >= com_len:
-            word_cnt   = 1
-            com_cnt   += 1
-            com_len    = min(len(comslist[com_cnt]), max_comlen)
-            pred_str  += "\n"
-
-        probs = probslist[i]       
-        maxprob_id = np.argmax(probs)
-        # maxprob    = probs.item(maxprob_id)
-        pred_str  += index_word_com[maxprob_id] + ' '
-
-    print(pred_str, file=open(outputfile['predict'], "w"))
+    predlist = []
+    for i in range(len(datslist)):
+        if sos == -1:
+            sos = comslist[i][0]
+        
+        prediction = greedy_search(model.predict, datslist[i], coms_vocabsize, max_comlen, sos, eos)
+        prediction_str = print_seq_str(prediction, index_word_com) + "\n"
+        logger.info(str(i+1) + '/' + str(len(datslist)) + ' prediction: ' + prediction_str)
+        predlist.append(prediction)
+        
+    logger.info('finished prediction. generated ' + str(len(predlist)) + ' sequences')
+    prediction_str = "\n".join([print_seq_str(prediction, index_word_com) for prediction in predlist])
+    print(prediction_str, file=open(outputfile['predict'], "w"))
