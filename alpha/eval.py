@@ -171,7 +171,6 @@ if __name__ == '__main__':
             com.append(1) # quick fix for the generate_batch which will ignore the last word of com.
             comslist.append(com)
             datslist.append(dat)
-            break
 
     print(datslist_str, file=open(outputfile['srcfile'], "w"))
     print(comslist_str, file=open(outputfile['reffile'], "w"))
