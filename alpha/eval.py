@@ -18,10 +18,12 @@ from model import fun_com_model
 from playground import load_embedding
 
 import configparser, argparse
+from prediction import Prediction
 
 def print_seq(seq, seq_name, index_word):
     print_str = seq_name + ' ' + print_seq_str(seq, index_word)
     print(print_str)
+
 
 def print_seq_str(seq, index_word):
     print_str = ''
@@ -33,102 +35,6 @@ def print_seq_str(seq, index_word):
         
     return print_str
 
-def beam_search(predict, source_sequence, coms_vocabsize, max_caplen, sos, eos, k):
-    dead_k = 0 # samples that reached eos
-    dead_samples = []
-    dead_scores = []
-
-    live_k = 1 # samples that did not yet reached eos
-    live_preds = [[]]
-    seq = np.zeros((max_caplen))
-    curs = [sos] # as a feed in the beginning (temporary workaround)
-    vhists = np.zeros((1, coms_vocabsize))
-    live_inputs = [np.asarray([source_sequence]),
-                   np.asarray(curs).reshape((-1, 1)),
-                   np.asarray([seq]),
-                   np.asarray(vhists)]
-    live_scores = [0]
-    word_cnt =  0
-
-    while live_k and dead_k < k:
-        probslist = predict(live_inputs)
-        # for each row in live_score, compute #coms_vocabsize scores for each word in probslist
-        cand_scores = np.array(live_scores)[:,None] - np.log(probslist)
-        
-        # pick the best scores
-        cand_flat = cand_scores.flatten()
-        ranks_flat = np.argpartition(cand_flat, k)[:k]
-        live_scores = cand_flat[ranks_flat]
-        live_preds = [live_preds[r//coms_vocabsize]+[r%coms_vocabsize] for r in ranks_flat]
-        
-        # update live_preds, dead_samples
-        zombie = [s[-1] == eos or len(s) >= max_caplen for s in live_preds]
-        dead_samples += [s for s,z in zip(live_preds,zombie) if z]
-        dead_scores += [s for s,z in zip(live_scores,zombie) if z]
-        dead_k = len(dead_samples)
-        live_preds = [s for s,z in zip(live_preds,zombie) if not z]
-        live_scores = [s for s,z in zip(live_scores,zombie) if not z]
-        live_k = len(live_preds)
-
-        # update live_inputs
-        seq = np.zeros((max_caplen))
-        seq[word_cnt] = 1
-        new_vhists = np.zeros((len(ranks_flat), coms_vocabsize))
-        for r in ranks_flat:
-            new_vhists[r//coms_vocabsize][r%coms_vocabsize] = 1
-            
-        vhists = [np.logical_or(vhists[i//coms_vocabsize], j) for i,j in zip(ranks_flat,new_vhists)]
-        vhists = [s for s,z in zip(vhists,zombie) if not z]
-        curs = [r%coms_vocabsize for r in ranks_flat]
-        curs = [s for s,z in zip(curs,zombie) if not z]
-        
-        live_inputs = [np.asarray([source_sequence for i in range(live_k)]),
-                       np.asarray(curs).reshape((-1, 1)),
-                       np.asarray([seq for i in range(live_k)]),
-                       np.asarray(vhists)]
-
-        word_cnt += 1
-        # end prediction
-
-    return dead_samples[np.argmax(dead_scores)]
-
-    
-## greedy search
-def greedy_search(predict, source_sequence, coms_vocabsize, max_caplen, sos, eos):
-    search_logger = logging.getLogger(__name__ + ': greedy_search')
-    
-    prediction = []
-    word_cnt = 0
-    pred = -1
-    vhist = np.zeros((1, coms_vocabsize))
-    
-    cur = sos
-    seq = np.zeros((max_caplen))
-    while True:
-        # predict a word
-        probslist = predict([np.asarray([source_sequence]),
-                             np.asarray(cur).reshape((-1, 1)),
-                             np.asarray([seq]),
-                             np.asarray(vhist)])
-        
-        probs = probslist[0]
-        pred = np.argmax(probs)
-        prediction.append(pred)
-        # maxprob = probs.item(pred)
-        # search_logger.info(str(word_cnt) + ': wordid#' + str(pred))
-
-        word_cnt += 1
-        if word_cnt >= max_caplen or pred == eos:
-            break
-
-        # prepare for the next iteration
-        seq = np.zeros((max_caplen))
-        seq[word_cnt-1] = 1
-        cur = pred # for next prediction
-        vhist[0, pred] = 1
-        # end prediction
-
-    return prediction
 
 def parse_config_var(config, var_name, var_default):
     var_val = var_default
@@ -188,11 +94,13 @@ if __name__ == '__main__':
     args = parse_args()
     modelpath  = args['modelpath']
     beamwidth = args['beamsearch']
-    search = ''
-    if beamwidth == -1:
-        search = 'greedy'
+
+    search = None
+    if beamwidth > 0:
+        search = Prediction('beam', {'beamwidth':beamwidth,}).search
     else:
-        search = 'beam'
+        search = Prediction('greedy').search
+
     
     config     = parse_config(args['configfile'])
     dataprep   = config['dataprep']
@@ -287,20 +195,13 @@ if __name__ == '__main__':
     for i in range(len(datslist)):
         if sos == -1:
             sos = comslist[i][0]
-
-        if search == 'greedy':
-            prediction = greedy_search(model.predict, datslist[i], coms_vocabsize, max_comlen, sos, eos)
-        elif search == 'beam':
-            logger.info('beam search...')
-            prediction = beam_search(model.predict, datslist[i], coms_vocabsize, max_comlen, sos, eos, beamwidth)
-        else:
-            logger.error("cannot recognize search algorithm: " + search + ", exit.")
-            sys.exit()
-        
+            
+        prediction = search(model.predict, datslist[i], coms_vocabsize, max_comlen, sos, eos)
         prediction_str = print_seq_str(prediction, index_word_com) + "\n"
         logger.info(str(i+1) + '/' + str(len(datslist)) + ' prediction: ' + prediction_str)
         predlist.append(prediction)
 
+    
     logger.info('finished prediction. generated ' + str(len(predlist)) + ' sequences')
     prediction_str = "\n".join([print_seq_str(prediction, index_word_com) for prediction in predlist])
     print(prediction_str, file=open(outputfile['predict'], "w"))
