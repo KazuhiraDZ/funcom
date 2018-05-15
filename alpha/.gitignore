@@ -1,3 +1,5 @@
 predicts.txt
 testref.txt
 testsrc.txt
+__pycache__/
+*~
