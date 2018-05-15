@@ -169,8 +169,8 @@ if __name__ == '__main__':
         comslist_str += print_seq_str(com, index_word_com) + "\n"
 
     
-    print(datslist_str, file=open("testsrc.txt", "w"))
-    print(comslist_str, file=open("testref.txt", "w"))
+    print(datslist_str, file=open(outputfile['srcfile'], "w"))
+    print(comslist_str, file=open(outputfile['reffile'], "w"))
     
     logger.info('loop cnt: ' + str(cnt) + ', coms cnt: ' + str(len(comslist)) + ', dats cnt: ' + str(len(datslist)))
     
@@ -210,9 +210,10 @@ if __name__ == '__main__':
             sos = comslist[i][0]
         
         prediction = greedy_search(model.predict, datslist[i], coms_vocabsize, max_comlen, sos, eos)
+        prediction_str = print_seq_str(prediction, index_word_com) + "\n"
+        logger.info(str(i+1) + '/' + str(len(datslist)) + ' prediction: ' + prediction_str)
         predlist.append(prediction)
         
     logger.info('finished prediction. generated ' + str(len(predlist)) + ' sequences')
-    for prediction in predlist:
-        prediction_str = print_seq_str(prediction, index_word_com) + "\n"
-        logger.info('prediction: ' + prediction_str)
+    prediction_str = "\n".join([print_seq_str(prediction, index_word_com) for prediction in predlist])
+    print(prediction_str, file=open(outputfile['predict'], "w"))
