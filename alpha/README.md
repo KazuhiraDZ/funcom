@@ -1,7 +1,7 @@
 # funcom - alpha
 A modified image-captioning model ([LemonATsu/Keras-Image-Caption](https://github.com/LemonATsu/Keras-Image-Caption)) for generating NL sequences from code sequences.
 
-# Prediction/Eval setup:
+## Prediction/Eval setup:
 1. To run testing for a model:
    1. set config file (example: test.ini)
       * ```dataprep```: the directory should have alldata.pkl, datstokenizer.pkl, comstokenizer.pkl
