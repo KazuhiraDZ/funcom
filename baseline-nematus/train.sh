@@ -7,24 +7,22 @@ function checkfiles ()
     do
 	if [ ! -s "$file" ]
 	then
-    	    echo "$file does not exist. Exit."
+    	    echo "train.sh: $file does not exist. Exit."
     	    exit 0
 	fi
     done
 }
 
 if [ "$#" -ne 4 ] && [ "$#" -ne 5 ]; then
-    echo "Illegal number of parameters"
-    echo "Usage: $0 output_directory_for_models data_directory_for_training vocab_size_for_source vocab_size_for_target [optional valid freq: default 10k]"
+    echo "train.sh: Illegal number of parameters"
+    echo "train.sh: Usage: $0 output_directory_for_models data_directory_for_training vocab_size_for_source vocab_size_for_target [optional valid freq: default 10k]"
     exit 0
 fi
 
-# setup env if needed:
-# export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
-# source ~/.profile
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
+source ~/.profile
 
-# change nematus path if needed
-nematus=../nematus-tensorflow/nematus/nmt.py
+nematus=./nematus-tensorflow/nematus/nmt.py
 
 modelout=$1
 datadir=$2
@@ -33,7 +31,7 @@ vocabsize_tgt=$4
 validfreq=${5:-10000} # 10000
 
 if test "$(ls -A "$modelout")"; then
-    echo "the output directory for model files is not empty."
+    echo "train.sh: the output directory for model files is not empty."
     exit 0
 else
     mkdir -p $modelout
@@ -47,11 +45,11 @@ vocabsrc=$datadir/vocab.src.json
 vocabtgt=$datadir/vocab.tgt.json
 
 files=("$trainsrc" "$traintgt" "$validsrc" "$validtgt" "$vocabsrc" "$vocabtgt")
-echo "check files..."
+echo "train.sh: check files..."
 checkfiles "${files[@]}"
 
-echo "dictionaries $datadir/vocab.src.json $datadir/vocab.tgt.json"
-echo "valid freq: $validfreq"
+echo "train.sh: dictionaries $datadir/vocab.src.json $datadir/vocab.tgt.json"
+echo "train.sh: valid freq: $validfreq"
 
 python2.7 $nematus \
 	  --model $modelout/model.npz \
