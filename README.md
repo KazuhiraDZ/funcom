@@ -2,6 +2,9 @@
 
 A research project of generating NL descriptions for software artifacts.
 
+### Overview of this project
+<img src="workflow.png" width="300">
+
 ### Alpha version
 folder: ./alpha
 A modified image-captioning model ([LemonATsu/Keras-Image-Caption](https://github.com/LemonATsu/Keras-Image-Caption)) for generating NL sequences from code sequences.
