@@ -1,0 +1,4 @@
+[submodule "baseline-nematus/nematus-tensorflow"]
+	path = baseline-nematus/nematus-tensorflow
+	url = https://github.com/EdinburghNLP/nematus.git
+	branch = tensorflow
