@@ -2,6 +2,9 @@
 
 Scripts for running [nematus-tensorflow](https://github.com/EdinburghNLP/nematus/tree/tensorflow) on our data sets.
 
+Usage:
+1) ```bash run.sh```
+
 Notes:
 1) this nematus does not support pre-trained embedding. (compared to the alpha version where we use a pre-trained embedding)
 2) like the alpha version, **for now**, we use a subset from the training set as the valid set
