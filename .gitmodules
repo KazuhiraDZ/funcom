@@ -1,3 +1,4 @@
 [submodule "baseline-codenn/codenn"]
 	path = baseline-codenn/codenn
 	url = https://github.com/sjiang1/codenn.git
+	branch = master
