@@ -11,6 +11,7 @@ import keras
 from keras.preprocessing.text import Tokenizer
 
 import configparser, argparse
+import re
 
 def createvocab( origvocab ):
     vocab = dict()
@@ -29,11 +30,6 @@ def createvocab( origvocab ):
 
 
 def vocabfiles( srctok, tgttok, srcoutfile, tgtoutfile ):
-    src_vocabsize = len(srctok.word_index) + 1
-    tgt_vocabsize = 10449 # top 10449 words are those that occur at least 100 times
-
-    print("vocab sizes: %s (src) %s (tgt) " % (src_vocabsize, tgt_vocabsize))
-    
     srcvocab = srctok.word_index # Tokenizer prepared by Keras should have been sorted by the word counts (in the reversed order)
     tgtvocab = tgttok.word_index
 
@@ -48,14 +44,26 @@ def vocabfiles( srctok, tgttok, srcoutfile, tgtoutfile ):
     json.dump(tgtvocab, tgtout, indent=2, ensure_ascii=False)
     tgtout.close()
 
+def strip_newline(word_str):
+    stripped_str = word_str
     
-def print_seq_str(seq, index_word):
+    if "\n" in word_str or "\r" in word_str or "\n\r" in word_str or "\r\n" in word_str:
+        # temporary disable the error
+        # logger.error("get a new line from index_word: " + word_str + "word id: " + str(word) + " in " + index_type)
+        # sys.exit(1)
+        stripped_str = re.sub(r"[\r\n]", " ", word_str)
+    
+    return stripped_str.strip()
+    
+
+def print_seq_str(seq, index_word, index_type):
     print_str = ''
     for word in seq:
         if word == 0: # for the padding in the dat sequences
             break
         
-        print_str += str(index_word[word]) + ' '
+        word_str = strip_newline(index_word[word])
+        print_str += word_str + ' '
         
     return print_str
 
@@ -66,18 +74,22 @@ def getdata_from_alldata(alldata, field_src, field_tgt, index_word_src, index_wo
     
     for fid in sorted(alldata[field_src].keys()):
         src = alldata[field_src][fid]
-        src_str = print_seq_str(src, index_word_src)
+        src_str = print_seq_str(src, index_word_src, field_src)
         srclist.append(src_str)
 
         tgt = alldata[field_tgt][fid]
-        tgt_str = print_seq_str(tgt, index_word_tgt)
+        tgt_str = print_seq_str(tgt, index_word_tgt, field_tgt)
         tgtlist.append(tgt_str)
 
+    logger.info("srclist: " + str(len(srclist)) + ", tgtlist: " + str(len(tgtlist)))
+    
     with open(srcoutfile, mode='wt', encoding='utf-8') as outf:
-        outf.write('\n'.join(srclist))
+        for line in srclist:
+            outf.write(line+'\n')
 
     with open(tgtoutfile, mode='wt', encoding='utf-8') as outf:
-        outf.write('\n'.join(tgtlist))
+        for line in tgtlist:
+            outf.write(line+'\n')
 
 
 def validfiles(alldata, index_word_src, index_word_tgt, srcoutfile, tgtoutfile):
@@ -91,11 +103,11 @@ def validfiles(alldata, index_word_src, index_word_tgt, srcoutfile, tgtoutfile):
     for fid in keys:
         cnt += 1
         src = alldata['dats_train_seqs'][fid]
-        src_str = print_seq_str(src, index_word_src)
+        src_str = print_seq_str(src, index_word_src, 'src')
         srclist.append(src_str)
 
         tgt = alldata['coms_train_seqs'][fid]
-        tgt_str = print_seq_str(tgt, index_word_tgt)
+        tgt_str = print_seq_str(tgt, index_word_tgt, 'tgt')
         tgtlist.append(tgt_str)
 
         if cnt >= 3000:
@@ -139,11 +151,15 @@ def parse_config(configfile):
     
     dataprep = parse_config_var(config, 'dataprep')
     outdir   = parse_config_var(config, 'outdir')
+    # src_vocabsize = parse_config_var(config, 'vocabsize_src')
+    # tgt_vocabsize = parse_config_var(config, 'vocabsize_tgt')
     if not os.path.exists(outdir):
         os.makedirs(outdir)
     
     return {'dataprep': dataprep,
             'outdir'  : outdir,}
+            # 'vocabsize_src':src_vocabsize,
+            # 'vocabsize_tgt':tgt_vocabsize,}
 
 def check_outputfiles(outputfiles):
     for key in outputfiles:
@@ -151,7 +167,7 @@ def check_outputfiles(outputfiles):
         if not os.path.isfile(fname):
             return
 
-    logger.info("the data files exists. Exit.")
+    logger.info("!!!!\n!!!!the data files exists. Exit.\n!!!!")
     sys.exit()
     
 ########
@@ -166,7 +182,9 @@ if __name__ == '__main__':
     args      = parse_args()
     config    = parse_config(args['configfile'])
     inputdir  = config['dataprep']
-    outputdir = config['outdir']    
+    outputdir = config['outdir']
+    # vocabsize_src = config['vocabsize_src']
+    # vocabsize_tgt = config['vocabsize_tgt']
 
     ## input files
     srctokfile=os.path.join(inputdir, 'datstokenizer.pkl')
@@ -189,27 +207,33 @@ if __name__ == '__main__':
     check_outputfiles(outputfiles)
     
     ## loading files
-    alldata = pickle.load(open(alldatafile, 'rb'))        
     srctok = pickle.load(open(srctokfile, 'rb'), encoding="UTF-8")
     index_word_src = {y:x for x,y in srctok.word_index.items()}
     tgttok = pickle.load(open(tgttokfile, 'rb'), encoding="UTF-8")
     index_word_tgt = {y:x for x,y in tgttok.word_index.items()}
     
+    # if "\n" in index_word_src[208299]:
+    #     logger.info("word has \\n: " +  str(srctok.word_index["else\n"]))
+    # else:
+    #     logger.info("word: " +  str(srctok.word_index["else"]))
+
+    alldata = pickle.load(open(alldatafile, 'rb'))
+    
     # generating vocab files
     logger.info("creating the vocab files...")
-    vocabfiles(srctok, tgttok, srcvocabfile, tgtvocabfile)
+    vocabfiles(srctok, tgttok, outputfiles['srcvocabfile'], outputfiles['tgtvocabfile']) # , vocabsize_src, vocabsize_tgt
 
     # generating training data files
     logger.info("creating the training data files...")
-    getdata_from_alldata(alldata, 'dats_train_seqs', 'coms_train_seqs', index_word_src, index_word_tgt, srctrainfile, tgttrainfile)
+    getdata_from_alldata(alldata, 'dats_train_seqs', 'coms_train_seqs', index_word_src, index_word_tgt, outputfiles['srctrainfile'], outputfiles['tgttrainfile'])
 
     # generating valid data files
     # like the alpha version, for now, we use a subset from the training set as the valid set
     logger.info("creating the valid data files...")
-    validfiles(alldata, index_word_src, index_word_tgt, srcvalidfile, tgtvalidfile)
+    validfiles(alldata, index_word_src, index_word_tgt, outputfiles['srcvalidfile'], outputfiles['tgtvalidfile'])
 
     # generating test data files
     logger.info("creating the test data files...")
-    getdata_from_alldata(alldata, 'dats_test_seqs', 'coms_test_seqs', index_word_src, index_word_tgt, srctestfile, tgttestfile)
+    getdata_from_alldata(alldata, 'dats_test_seqs', 'coms_test_seqs', index_word_src, index_word_tgt, outputfiles['srctestfile'], outputfiles['tgttestfile'])
 
     logger.info("Finished.")

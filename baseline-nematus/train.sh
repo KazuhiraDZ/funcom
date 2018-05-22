@@ -1,79 +1,127 @@
 #!/bin/bash
+source time.sh
 
-function checkfiles ()
+today=`date +%Y-%m-%d.%H%M%S`
+log=run.log.$today
+
+read -r -d '' helpmsg <<EOM
+Usage: $0
+    -c          [required] set a config file
+    -d          [optional] set a gpu id to be used
+    -l          [optional] set the file name for log; default file name: $log
+    -h          display this help message
+EOM
+
+passarg=true
+while getopts ":c:d:l:h" opt; do
+  case ${opt} in
+    c )
+	config=$OPTARG
+	;;
+    d )
+	dev=$OPTARG
+	;;
+    l )
+	log=$OPTARG
+	;;
+    h )
+        passarg=false
+	;;
+    \? )
+	echo "Invalid option: $OPTARG" 1>&2
+	passarg=false
+	;;
+    : )
+	echo "Invalid option: $OPTARG requires an argument" 1>&2
+	passarg=false
+	;;
+  esac
+done
+shift $((OPTIND -1))
+
+if $passarg && [ -z "$config" ]; then
+    echo "Must use -c to specify a config file to use."
+    passarg=false
+fi
+
+if ! $passarg ;then
+    echo "$helpmsg"
+fi
+
+echo "config file: $config, log file: $log" | tee -a $log
+
+
+###
+### download nematus if necessary
+###
+function downloadnematus()
 {
-    files=("$@")
-    for file in "${files[@]}";
-    do
-	if [ ! -s "$file" ]
-	then
-    	    echo "train.sh: $file does not exist. Exit."
-    	    exit 0
-	fi
-    done
+    echo "git submodule does not work... it's okay..."
+
+    local nematusdir=nematus-tensorflow
+    if [ -d "$nematusdir" ]; then
+	echo "nematus-tensorflow already exists. if you would like to update the nematus copy, remove the folder first." | tee -a $log
+    else
+	echo "we download from my fork..." | tee -a $log
+	# use my fork of nematus, in case there is any major change in the original nematus repo
+	git clone --depth=1 --branch=tensorflow https://github.com/sjiang1/nematus.git $nematusdir
+	rm -rf ${nematusdir}/.git
+    fi
 }
 
-if [ "$#" -ne 4 ] && [ "$#" -ne 5 ]; then
-    echo "train.sh: Illegal number of parameters"
-    echo "train.sh: Usage: $0 output_directory_for_models data_directory_for_training vocab_size_for_source vocab_size_for_target [optional valid freq: default 10k]"
-    exit 0
+git submodule init
+submoduleflag=false
+if [ $? -eq 0 ]
+then
+    git submodule update
+    if [ $? -eq 0 ]
+    then
+	submoduleflag=true
+    fi
 fi
 
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
-source ~/.profile
+if ! $submoduleflag ;then
+    downloadnematus
+fi
 
-nematus=./nematus-tensorflow/nematus/nmt.py
+###
+### prepare the data set
+###
+start=$(date +%s.%N)
+python3 prepdata.py --config $config 2>&1 | tee -a $log
+end=$(date +%s.%N)
+diff=`show_time $end $start`
+echo "prepdata: $diff" | tee -a $log
 
-modelout=$1
-datadir=$2
-vocabsize_src=$3
-vocabsize_tgt=$4
-validfreq=${5:-10000} # 10000
+###
+### train nematus
+###
+function checkconfig()
+{
+    local var=$1
+    if [ -z "${TRAIN[$var]}" ]; then
+        echo "$0: cannot get config variable: $var for train_nmt.sh. Exit."
+        exit 1
+    fi
+    printf "$var: ${TRAIN[$var]}, " | tee -a $log
+}
 
-if test "$(ls -A "$modelout")"; then
-    echo "train.sh: the output directory for model files is not empty."
-    exit 0
+eval "$(cat $config  | python ./ini2arr.py)"
+printf "train_nmt.sh: " | tee -a $log
+checkconfig 'outdir'
+checkconfig 'data'
+checkconfig 'vocabsize_src'
+checkconfig 'vocabsize_tgt'
+printf "\n" | tee -a $log
+start=$(date +%s.%N)
+if [ -z "$dev" ]; then
+    bash train_nmt.sh ${TRAIN[outdir]} ${TRAIN[data]} ${TRAIN[vocabsize_src]} ${TRAIN[vocabsize_tgt]} 2>&1 | tee -a $log
 else
-    mkdir -p $modelout
+    CUDA_VISIBLE_DEVICES=$dev bash train_nmt.sh ${TRAIN[outdir]} ${TRAIN[data]} ${TRAIN[vocabsize_src]} ${TRAIN[vocabsize_tgt]} 2>&1 | tee -a $log
 fi
 
-trainsrc=$datadir/train.src.txt
-traintgt=$datadir/train.tgt.txt
-validsrc=$datadir/valid.src.txt
-validtgt=$datadir/valid.tgt.txt
-vocabsrc=$datadir/vocab.src.json
-vocabtgt=$datadir/vocab.tgt.json
+end=$(date +%s.%N)
+diff=`show_time $end $start`
+echo "train: $diff" | tee -a $log
 
-files=("$trainsrc" "$traintgt" "$validsrc" "$validtgt" "$vocabsrc" "$vocabtgt")
-echo "train.sh: check files..."
-checkfiles "${files[@]}"
-
-echo "train.sh: dictionaries $datadir/vocab.src.json $datadir/vocab.tgt.json"
-echo "train.sh: valid freq: $validfreq"
-
-python2.7 $nematus \
-	  --model $modelout/model.npz \
-	  --dim_word 512 \
-	  --dim 1024 \
-	  --source_vocab_size $vocabsize_src \
-	  --target_vocab_size $vocabsize_tgt \
-	  --decay_c 0 \
-	  --clip_c 1 \
-	  --lrate 0.0001 \
-	  --optimizer adam \
-	  --maxlen 50 \
-	  --batch_size 80 \
-	  --valid_batch_size 80 \
-	  --datasets $trainsrc $traintgt \
-	  --valid_source_dataset $validsrc \
-	  --valid_target_dataset $validtgt \
-	  --dictionaries $vocabsrc $vocabtgt \
-	  --validFreq $validfreq \
-	  --dispFreq 1000 \
-	  --dropout_embedding 0.2 \
-	  --dropout_hidden 0.2 \
-	  --dropout_source 0.1 \
-	  --dropout_target 0.1 \
-	  --no_shuffle \
-	  --saveFreq 30000 \
-	  --sampleFreq 10000
+exit 0
