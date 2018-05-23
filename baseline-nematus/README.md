@@ -5,8 +5,12 @@ Scripts for running [nematus-tensorflow](https://github.com/EdinburghNLP/nematus
 Prerequisite
 python3, python2, keras, tensorflow in python3 & python2
 
+### Overview of this baseline
+<img src="workflow.png" width="400">
+
 Usage:
-1) ```bash run.sh```
+1) modify the nematus.ini based on the above workflow image.
+2) ```bash train.sh -c nematus.ini```
 
 Notes:
 1) this nematus does not support pre-trained embedding. (compared to the alpha version where we use a pre-trained embedding)
