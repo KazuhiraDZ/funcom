@@ -53,22 +53,6 @@ echo "config file: $config, log file: $log" | tee -a $log
 source download_codenn.sh
 
 ###
-### PYTHON scripts: prepare the environment vairables
-###
-cwd=$(pwd)
-export PYTHONPATH="${PYTHONPATH}:$cwd/codenn/src/"
-export CODENN_DIR="$cwd/codenn"
-
-workdir=${CODENN[workdir]}
-if [[ "$DIR" = /* ]]; then
-    export CODENN_WORK=$workdir
-else
-    # if the workdir is a relative path, change it to the absolute path
-    export CODENN_WORK=$cwd/$workdir
-fi
-echo "PYTHONPATH: $PYTHONPATH, CODENN_DIR: ${CODENN_DIR}, CODENN_WORK: ${CODENN_WORK}" | tee -a $log
-
-###
 ### Parsing the config file
 ###
 function checkconfig()
@@ -88,6 +72,23 @@ eval "$(cat $config  | python ./ini2arr.py)"
 checkconfig 'CODENN' 'workdir'
 checkconfig 'PREPDATA' 'outdir'
 checkconfig 'PREPDATA' 'dataprep'
+printf "\n" | tee -a $log
+
+###
+### PYTHON scripts: prepare the environment vairables
+###
+cwd=$(pwd)
+export PYTHONPATH="${PYTHONPATH}:$cwd/codenn/src/"
+export CODENN_DIR="$cwd/codenn"
+
+workdir=${CODENN[workdir]}
+if [[ "$DIR" = /* ]]; then
+    export CODENN_WORK=$workdir
+else
+    # if the workdir is a relative path, change it to the absolute path
+    export CODENN_WORK=$cwd/$workdir
+fi
+echo "PYTHONPATH: $PYTHONPATH, CODENN_DIR: ${CODENN_DIR}, CODENN_WORK: ${CODENN_WORK}" | tee -a $log
 
 ###
 ### prepare the data set
@@ -111,9 +112,9 @@ echo "parsedata: $diff" | tee -a $log
 ###
 ### CODENN: buildData
 ###
-# pushd ./codenn/src/model
-# bash ./buildData.sh
-# popd
+pushd ./codenn/src/model
+bash ./buildData.sh
+popd
 
 ###
 ### CODENN: train

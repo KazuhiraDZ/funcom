@@ -188,8 +188,9 @@ if __name__ == '__main__':
     config    = parse_config(args['configfile'])
     inputdir  = config['dataprep']
     outputdir = config['outdir']
-    # vocabsize_src = config['vocabsize_src']
-    # vocabsize_tgt = config['vocabsize_tgt']
+
+    if not os.path.exists(outputdir):
+        os.makedirs(outputdir)
 
     ## input files
     srctokfile=os.path.join(inputdir, 'datstokenizer.pkl')
