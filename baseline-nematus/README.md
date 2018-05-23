@@ -2,6 +2,9 @@
 
 Scripts for running [nematus-tensorflow](https://github.com/EdinburghNLP/nematus/tree/tensorflow) on our data sets.
 
+Prerequisite
+python3, python2, keras, tensorflow in python3 & python2
+
 Usage:
 1) ```bash run.sh```
 
