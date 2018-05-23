@@ -2,8 +2,9 @@
 
 Scripts for running [nematus-tensorflow](https://github.com/EdinburghNLP/nematus/tree/tensorflow) on our data sets.
 
-Prerequisite
-python3, python2, keras, tensorflow in python3 & python2
+###Prerequisites
+python3, python2, keras, tensorflow in python3 & python2\
+tested on Ubuntu 16 and Debian GNU/Linux 8.10
 
 ### Overview of this baseline
 <img src="workflow.png" width="400">
