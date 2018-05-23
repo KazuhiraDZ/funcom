@@ -1,8 +1,0 @@
-time bash train.sh output data 50000 10449
-time bash test.sh "./output/model.npz-1020000 ./output/model.npz-1050000 ./output/model.npz-1080000 ./output/model.npz-1110000" ./data/test.src.split/test.src.part0000 ./data/test.src.split/test.src.part0000.out.txt ./output/model.npz.json  
-time bash test.sh "./output/model.npz-1020000 ./output/model.npz-1050000 ./output/model.npz-1080000 ./output/model.npz-1110000" ./data/test.src.split/test.src.part0101 ./data/test.src.split/test.src.part0101.out.txt ./output/model.npz.json  
-time bash test.sh "./output/model.npz-1020000 ./output/model.npz-1050000 ./output/model.npz-1080000 ./output/model.npz-1110000" ./data/test.src.split/test.src.part1202 ./data/test.src.split/test.src.part1202.out.txt ./output/model.npz.json  
-time bash test.sh "./output/model.npz-1020000 ./output/model.npz-1050000 ./output/model.npz-1080000 ./output/model.npz-1110000" ./data/test.src.split/test.src.part0303 ./data/test.src.split/test.src.part0303.out.txt ./output/model.npz.json  
-time bash test.sh "./output/model.npz-1020000 ./output/model.npz-1050000 ./output/model.npz-1080000 ./output/model.npz-1110000" ./data/test.src.split/test.src.part1404 ./data/test.src.split/test.src.part1404.out.txt ./output/model.npz.json  
-time bash test.sh "./output/model.npz-1020000 ./output/model.npz-1050000 ./output/model.npz-1080000 ./output/model.npz-1110000" ./data/test.src.split/test.src.part0505 ./data/test.src.split/test.src.part0505.out.txt ./output/model.npz.json  
-time bash test.sh "./output/model.npz-1020000 ./output/model.npz-1050000 ./output/model.npz-1080000 ./output/model.npz-1110000" ./data/test.src.split/test.src.part1606 ./data/test.src.split/test.src.part1606.out.txt ./output/model.npz.json  

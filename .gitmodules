@@ -1,3 +1,7 @@
+[submodule "baseline-nematus/nematus-tensorflow"]
+	path = baseline-nematus/nematus-tensorflow
+	url = https://github.com/EdinburghNLP/nematus.git
+	branch = tensorflow
 [submodule "baseline-codenn/codenn"]
 	path = baseline-codenn/codenn
 	url = https://github.com/sjiang1/codenn.git
