@@ -12,9 +12,12 @@ tested on Ubuntu 16 and Debian GNU/Linux 8.10
 **Note** we assume the word_index in the tokenizers (comstokenizer.pkl, datstokenizer.pkl) are fitted to the train data set.
 
 Usage:
-1) modify the nematus.ini based on the above workflow image.
-2) ```bash train.sh -c nematus.ini```
-3) ```bash test.sh -c nematus.ini```
+1) modify the nematus.ini based on the above workflow image.\
+   most likely, you need to change ```dataprep``` to point to the folder that has alldata.pkl, comstokenizer.pkl and datstokenizer.pkl
+2) ```bash train.sh -c nematus.ini```\
+   ```bash train.sh -h``` to display other options
+3) ```bash test.sh -c nematus.ini```\
+   ```bash test.sh -h``` to display other options
 
 Notes:
 1) this nematus does not support pre-trained embedding. (compared to the alpha version where we use a pre-trained embedding)
