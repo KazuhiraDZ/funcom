@@ -1,0 +1,6 @@
+*~
+*.bak
+run.log*
+workdir/
+test.log*
+train.log*
