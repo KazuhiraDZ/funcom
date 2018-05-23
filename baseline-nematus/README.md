@@ -12,6 +12,7 @@ tested on Ubuntu 16 and Debian GNU/Linux 8.10
 Usage:
 1) modify the nematus.ini based on the above workflow image.
 2) ```bash train.sh -c nematus.ini```
+3) ```bash test.sh -c nematus.ini```
 
 Notes:
 1) this nematus does not support pre-trained embedding. (compared to the alpha version where we use a pre-trained embedding)
