@@ -3,11 +3,11 @@
 ###
 ### download nematus if necessary
 ###
+nematusdir=nematus-tensorflow
 function downloadnematus()
 {
     echo "git submodule does not work... it's okay..."
 
-    local nematusdir=nematus-tensorflow
     if [ -d "$nematusdir" ]; then
 	echo "nematus-tensorflow already exists. if you would like to update the nematus copy, remove the folder first." | tee -a $log
     else
@@ -22,9 +22,13 @@ git submodule init
 submoduleflag=false
 if [ $? -eq 0 ]
 then
-    git submodule update
+    git submodule update --remote
     if [ $? -eq 0 ]
     then
+	pushd ./$nematusdir
+	git checkout master
+	git pull
+	popd
 	submoduleflag=true
     fi
 fi
