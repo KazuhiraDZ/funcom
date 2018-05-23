@@ -2,6 +2,20 @@
 
 Scripts for running [nematus-tensorflow](https://github.com/EdinburghNLP/nematus/tree/tensorflow) on our data sets.
 
+### Prerequisites
+python3, python2, keras, tensorflow in python3 & python2\
+tested on Ubuntu 16 and Debian GNU/Linux 8.10
+
+### Overview of this baseline
+<img src="workflow.png" width="400">
+
+**Note** we assume the word_index in the tokenizers (comstokenizer.pkl, datstokenizer.pkl) are fitted to the train data set.
+
+Usage:
+1) modify the nematus.ini based on the above workflow image.
+2) ```bash train.sh -c nematus.ini```
+3) ```bash test.sh -c nematus.ini```
+
 Notes:
 1) this nematus does not support pre-trained embedding. (compared to the alpha version where we use a pre-trained embedding)
 2) like the alpha version, **for now**, we use a subset from the training set as the valid set

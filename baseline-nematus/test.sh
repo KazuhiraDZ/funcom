@@ -1,35 +1,97 @@
-#!/bin/sh
+#!/bin/bash
 
-# downloaded from https://raw.githubusercontent.com/rsennrich/wmt16-scripts/master/sample/translate.sh
+source time.sh
 
-# change nematus path if needed
-nematus=/scratch/funcom/nematus-tensorflow/nematus
+today=`date +%Y-%m-%d.%H%M%S`
+log=test.log.$today
 
-if [ "$#" -ne 4 ]; then
-    echo "usage: model testfile testoutput npz.json_file"
-    exit 1
+read -r -d '' helpmsg <<EOM
+Usage: $0
+    -c          [required] set a config file
+    -d          [optional] set a gpu id to be used
+    -l          [optional] set the file name for log; default file name: $log
+    -h          display this help message
+EOM
+
+passarg=true
+while getopts ":c:d:l:h" opt; do
+  case ${opt} in
+    c )
+	config=$OPTARG
+	;;
+    d )
+	dev=$OPTARG
+	;;
+    l )
+	log=$OPTARG
+	;;
+    h )
+        passarg=false
+	;;
+    \? )
+	echo "Invalid option: $OPTARG" 1>&2
+	passarg=false
+	;;
+    : )
+	echo "Invalid option: $OPTARG requires an argument" 1>&2
+	passarg=false
+	;;
+  esac
+done
+shift $((OPTIND -1))
+
+if $passarg && [ -z "$config" ]; then
+    echo "Must use -c to specify a config file to use."
+    passarg=false
 fi
 
-MODEL=$1 #./models/model.100k.npz.npz.best_bleu
-TEST=$2  #./data/test.1k.diff
-OUT=$3   #./data/test.1k.diff.output
-JSONORIG=$4
+if ! $passarg ;then
+    echo "$helpmsg"
+    exit 0
+fi
 
-printf "model=\"%s\", test=%s, out=%s, jsonorig=%s\n" "$MODEL" "$TEST" "$OUT" "$JSONORIG"
+echo "config file: $config, log file: $log" | tee -a $log
 
-models=($MODEL)
-for modelfile in "${models[@]}"
-do
-    # example: models/model.205552.50000.50000.npz.json models/model.205552.50000.50000.iter120000.npz.json
-    jsonfile="${modelfile}.json"
-    if [ ! -f $jsonfile ]; then
-	cp $JSONORIG $jsonfile
+source download_nematus.sh
+
+###
+### test nematus
+###
+function checkconfig()
+{
+    local var=$1
+    if [ -z "${TEST[$var]}" ]; then
+        echo "$0: cannot get config variable: $var for test_nmt.sh. Exit."
+        exit 1
     fi
-done
+    printf "$var: ${TEST[$var]}, " | tee -a $log
+}
 
-python2.7 $nematus/translate.py \
-	    -m $MODEL \
-	    -i $TEST \
-	    -o $OUT \
-	    -k 12 -n -p 1
+eval "$(cat $config  | python ./ini2arr.py)"
 
+printf "test_nmt.sh: " | tee -a $log
+checkconfig 'outdir'
+mkdir -p ${TEST[outdir]}
+checkconfig 'modeldir'
+checkconfig 'datadir'
+checkconfig 'predict'
+printf "\n" | tee -a $log
+modelfiles=`python3 getmodels.py ${TEST[modeldir]}`
+if [ -z "$modelfiles" ]; then
+    echo "Cannot find model files in ${TEST[modeldir]}. Exit." | tee -a $log
+    exit 1
+else
+    echo "model files: $modelfiles" | tee -a $log    
+fi
+
+start=$(date +%s.%N)
+if [ -z "$dev" ]; then
+    bash test_nmt.sh "$modelfiles" ${TEST[datadir]}/test.src.txt ${TEST[outdir]}/${TEST[predict]} ${TEST[modeldir]}/model.npz.json 2>&1 | tee -a $log
+else
+    CUDA_VISIBLE_DEVICES=$dev bash test_nmt.sh "$modelfiles" ${TEST[datadir]}/test.src.txt ${TEST[outdir]}/${TEST[predict]} ${TEST[modeldir]}/model.npz.json 2>&1 | tee -a $log
+fi
+end=$(date +%s.%N)
+diff=`show_time $end $start`
+echo "test: $diff" | tee -a $log
+
+exit 0
