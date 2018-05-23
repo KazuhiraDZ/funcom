@@ -9,6 +9,8 @@ tested on Ubuntu 16 and Debian GNU/Linux 8.10
 ### Overview of this baseline
 <img src="workflow.png" width="400">
 
+**Note** we assume the word_index in the tokenizers (comstokenizer.pkl, datstokenizer.pkl) are fitted to the train data set.
+
 Usage:
 1) modify the nematus.ini based on the above workflow image.
 2) ```bash train.sh -c nematus.ini```

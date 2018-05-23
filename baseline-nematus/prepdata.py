@@ -15,10 +15,12 @@ import re
 
 def createvocab( origvocab ):
     vocab = dict()
-    vocab['eos'] = 0
-    vocab['UNK'] = 1
+    vocab['eos']  = 0
+    vocab['UNK']  = 1
+    vocab['<s>']  = 2
+    vocab['</s>'] = 3
     
-    i = 2
+    i = 4
     for word, count in origvocab.items():
         if word == 'eos' or word == 'UNK':
             continue
