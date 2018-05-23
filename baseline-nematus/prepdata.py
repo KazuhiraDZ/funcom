@@ -22,7 +22,7 @@ def createvocab( origvocab ):
     
     i = 4
     for word, count in origvocab.items():
-        if word == 'eos' or word == 'UNK':
+        if word == 'eos' or word == 'UNK' or word == '<s>' or word == '</s>':
             continue
         
         vocab[word] = i
