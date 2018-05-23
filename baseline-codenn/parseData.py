@@ -101,6 +101,6 @@ if __name__ == '__main__':
       return
     
     # Create training and validation and test sets
-    output(outputfiles['train', params['trainfile_src'], params['trainfile_tgt'])
-    output(outputfiles['valid', params['validfile_src'], params['validfile_tgt'])
-    output(outputfiles['test', params['testfile_src'], params['testfile_tgt'])
+    output(outputfiles['train'], params['trainfile_src'], params['trainfile_tgt'])
+    output(outputfiles['valid'], params['validfile_src'], params['validfile_tgt'])
+    output(outputfiles['test'], params['testfile_src'], params['testfile_tgt'])

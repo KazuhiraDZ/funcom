@@ -17,10 +17,12 @@ def createvocab( origvocab ):
     vocab = dict()
     vocab['eos'] = 0
     vocab['UNK'] = 1
+    vocab['<s>'] = 2
+    vocab['</s>'] = 3
     
-    i = 2
+    i = 4
     for word, count in origvocab.items():
-        if word == 'eos' or word == 'UNK':
+        if word == 'eos' or word == 'UNK' or word == '<s>' or word == '</s>':
             continue
         
         vocab[word] = i
@@ -51,7 +53,7 @@ def strip_newline(word_str):
         # temporary disable the error
         # logger.error("get a new line from index_word: " + word_str + "word id: " + str(word) + " in " + index_type)
         # sys.exit(1)
-        stripped_str = re.sub(r"[\r\n]", " ", word_str)
+        stripped_str = re.sub(r"[\r\n]", "\\n", word_str)
     
     return stripped_str.strip()
     
