@@ -54,7 +54,10 @@ def strip_newline(word_str):
         # logger.error("get a new line from index_word: " + word_str + "word id: " + str(word) + " in " + index_type)
         # sys.exit(1)
         stripped_str = re.sub(r"[\r\n]", "\\n", word_str)
-    
+
+    if "\t" in stripped_str:
+        stripped_str = re.sub(r"\t", " ", stripped_str)
+        
     return stripped_str.strip()
     
 
@@ -76,7 +79,7 @@ def getdata_from_alldata(alldata, field_src, field_tgt, index_word_src, index_wo
     
     for fid in sorted(alldata[field_tgt].keys()):
         src = alldata[field_src][fid]
-        src_str = re.sub(r"[\r\n]", " ", src)
+        src_str = re.sub(r"[\r\n\t]", " ", src)
         srclist.append(src_str)
 
         tgt = alldata[field_tgt][fid]
@@ -105,7 +108,7 @@ def validfiles(alldata, index_word_src, index_word_tgt, srcoutfile, tgtoutfile):
     for fid in keys:
         cnt += 1
         src = alldata['dats_raw'][fid]
-        src_str = re.sub(r"[\r\n]", " ", src)
+        src_str = re.sub(r"[\r\n\t]", " ", src)
         srclist.append(src_str)
 
         tgt = alldata['coms_train_seqs'][fid]
