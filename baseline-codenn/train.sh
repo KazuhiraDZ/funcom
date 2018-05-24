@@ -162,7 +162,7 @@ else
     start=$(date +%s.%N)
     echo "running codenn/src/model/run.sh ... " | tee -a $log
     pushd ./codenn/src/model
-    th ./main.lua -gpuidx $dev -language cpp -outdir $modelout
+    th ./main.lua -gpuidx $dev -language cpp -outdir $cwd/$modelout
     popd
     end=$(date +%s.%N)
     diff=`show_time $end $start`
