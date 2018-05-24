@@ -1,5 +1,4 @@
 #!/bin/bash
-
 source time.sh
 
 today=`date +%Y-%m-%d.%H%M%S`
@@ -51,6 +50,8 @@ if ! $passarg ;then
 fi
 
 echo "config file: $config, log file: $log" | tee -a $log
+exec {BASH_XTRACEFD}>>$log
+set -x
 
 source download_nematus.sh
 
