@@ -8,7 +8,7 @@ function downloadnematus()
 {
     echo "git submodule does not work... it's okay..."
 
-    if [ -d "$nematusdir" ]; then
+    if [ -d "$nematusdir" ] && [ -f "$nematusdir/nematus/nmt.py" ]; then
 	echo "nematus-tensorflow already exists. if you would like to update the nematus copy, remove the folder first." | tee -a $log
     else
 	echo "we download from my fork..." | tee -a $log
