@@ -93,62 +93,51 @@ echo "PYTHONPATH: $PYTHONPATH, CODENN_DIR: ${CODENN_DIR}, CODENN_WORK: ${CODENN_
 ###
 ### prepare the data set
 ###
+echo "running codenn/src/cpp/createParser ... " | tee -a $log
 pushd ./codenn/src/cpp
 bash createParser.sh 2>&1 | tee -a $cwd/$log
 popd
+echo "codenn/src/cpp/createParser.sh done" | tee -a $log
 
 start=$(date +%s.%N)
-python3 ./prepdata.py --config $cwd/$config 2>&1 | tee -a $log
+echo "running prepdata.py ... " | tee -a $log
+python3 ./prepdata.py --config $config 2>&1 | tee -a $log
 end=$(date +%s.%N)
 diff=`show_time $end $start`
-echo "prepdata: $diff" | tee -a $log
+echo "prepdata.py done: $diff" | tee -a $log
 
 start=$(date +%s.%N)
-python2 ./parseData.py --config $cwd/$config 2>&1 | tee -a $log
+echo "running parseData.py ... " | tee -a $log
+python2 ./parseData.py --config $config 2>&1 | tee -a $log
 end=$(date +%s.%N)
 diff=`show_time $end $start`
-echo "parsedata: $diff" | tee -a $log
+echo "parseData.py done: $diff" | tee -a $log
 
 ###
 ### CODENN: buildData
 ###
-pushd ./codenn/src/model
-bash ./buildData.sh
-popd
+missingfile=false
+all=("$CODENN_WORK/test.data.cpp" "$CODENN_WORK/test.txt.cpp" "$CODENN_WORK/train.data.cpp" "$CODENN_WORK/train.txt.cpp" "$CODENN_WORK/valid.data.cpp" "$CODENN_WORK/valid.txt.cpp" "$CODENN_WORK/vocab.cpp" "$CODENN_WORK/vocab.data.cpp")
+for i in "${all[@]}" ; do
+    if [ ! -f $i ]; then
+        missingfile=true
+    fi
+done 
+
+if $missingfile ;then
+    start=$(date +%s.%N)
+    echo "running codenn/src/model/buildData.sh ... " | tee -a $log
+    pushd ./codenn/src/model
+    bash ./buildData.sh  2>&1 | tee -a $cwd/$log
+    popd
+    end=$(date +%s.%N)
+    diff=`show_time $end $start`
+    echo "codenn/src/model/buildData.sh done: $diff" | tee -a $log
+else
+    printf "existing files in ${CODENN_WORK}. \n!!!\n!!!**Skip** codenn/src/model/buildData.sh\n!!!\n" | tee -a $log
+fi
 
 ###
 ### CODENN: train
 ###
-# printf "train.sh: " | tee -a $log
-# checkconfig 'CODENN' 'workdir'
-# printf "\n" | tee -a $log
-exit 0
 
-# start=$(date +%s.%N)
-# python3 prepdata.py --config $config 2>&1 | tee -a $log
-# end=$(date +%s.%N)
-# diff=`show_time $end $start`
-# echo "prepdata: $diff" | tee -a $log
-
-# function checkconfig()
-# {
-#     local var=$1
-#     if [ -z "${TRAIN[$var]}" ]; then
-#         echo "$0: cannot get config variable: $var for train.sh. Exit."
-#         exit 1
-#     fi
-#     printf "$var: ${TRAIN[$var]}, "
-# }
-
-# eval "$(cat $config  | python ./ini2arr.py)"
-# printf "train.sh: "
-# checkconfig 'outdir'
-# checkconfig 'data'
-# checkconfig 'vocabsize_src'
-# checkconfig 'vocabsize_tgt'
-# printf "\n"
-# start=$(date +%s.%N)
-# bash train.sh ${TRAIN[outdir]} ${TRAIN[data]} ${TRAIN[vocabsize_src]} ${TRAIN[vocabsize_tgt]} | tee -a $log
-# end=$(date +%s.%N)
-# diff=`show_time $end $start`
-# echo "prepdata: $diff" | tee -a $log
