@@ -48,8 +48,11 @@ if ! $passarg ;then
     exit 0
 fi
 
-echo "config file: $config, log file: $log" | tee -a $log
+cwd=$(pwd)
 
+echo "config file: $config, log file: $log" | tee -a $log
+exec {BASH_XTRACEFD}>>$cwd/$log
+set -x
 source download_codenn.sh
 
 ###
@@ -72,12 +75,12 @@ eval "$(cat $config  | python ./ini2arr.py)"
 checkconfig 'CODENN' 'workdir'
 checkconfig 'PREPDATA' 'outdir'
 checkconfig 'PREPDATA' 'dataprep'
+checkconfig 'TRAIN' 'outdir'
 printf "\n" | tee -a $log
 
 ###
 ### PYTHON scripts: prepare the environment vairables
 ###
-cwd=$(pwd)
 export PYTHONPATH="${PYTHONPATH}:$cwd/codenn/src/"
 export CODENN_DIR="$cwd/codenn"
 
@@ -140,4 +143,19 @@ fi
 ###
 ### CODENN: train
 ###
-
+modelout=${TRAIN[outdir]}
+if test "$(ls -A "$modelout")"; then
+    echo "the output directory for model files is not empty."
+    printf "\n!!!\nSkip codenn/src/model/run.sh --> which means **skip** training!\n!!!\n"
+    exit 0
+else
+    mkdir -p $modelout
+    start=$(date +%s.%N)
+    echo "running codenn/src/model/run.sh ... " | tee -a $log
+    pushd ./codenn/src/model
+    bash ./run.sh cpp $cwd/$modelout  2>&1 | tee -a $cwd/$log
+    popd
+    end=$(date +%s.%N)
+    diff=`show_time $end $start`
+    echo "codenn/src/model/run.sh done: $diff" | tee -a $log
+fi

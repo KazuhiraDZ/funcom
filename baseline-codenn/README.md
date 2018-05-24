@@ -2,5 +2,15 @@
 
 Scripts for running [codenn](https://github.com/sjiang1/codenn) on our data sets.
 
+### Prerequisites
+python2, python3, tensorflow and keras in python2 and python3 \
+configparser, argparse modules \
+tested on Ubuntu 16 and Debian GNU/Linux 8.10
+
+### Overview of this baseline
+
 Usage:
-1) ```bash run.sh```
+1) modify the codenn.ini based on the above workflow image.\
+   most likely, you need to change ```dataprep``` under ```[PREPDATA]``` to the folder that has alldata.pkl, comstokenizer.pkl and datstokenizer.pkl
+2) ```bash train.sh -c codenn.ini```
+
