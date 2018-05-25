@@ -170,6 +170,7 @@ if test "$(ls -A "$modelout")"; then
     printf "\n!!!\nSkip codenn/src/model/run.sh --> which means **skip** training!\n!!!\n"
     exit 0
 else
+    echo "the output directory does not exist or is empty. Good! Creating one."
     mkdir -p $modelout
     start=$(date +%s.%N)
     echo "running codenn/src/model/run.sh ... " | tee -a $log

@@ -8,7 +8,8 @@ import random
 random.seed(1337)
 
 import keras
-from keras.preprocessing.text import Tokenizer
+# from keras.preprocessing.text import Tokenizer
+import Tokenizer
 
 import configparser, argparse
 import re
