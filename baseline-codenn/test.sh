@@ -89,9 +89,25 @@ checkconfig 'TEST' 'datadir'
 checkconfig 'TEST' 'predict'
 checkconfig 'TEST' 'outdir'
 mkdir -p ${TEST[outdir]}
-
 printf "\n" | tee -a $log
 
+###
+### setting up environment paths
+###
+export CODENN_DIR="$cwd/codenn"
+
+workdir=${CODENN[workdir]}
+if [[ "$DIR" = /* ]]; then
+    export CODENN_WORK=$workdir
+else
+    # if the workdir is a relative path, change it to the absolute path
+    export CODENN_WORK=$cwd/$workdir
+fi
+echo "CODENN_DIR: ${CODENN_DIR}, CODENN_WORK: ${CODENN_WORK}" | tee -a $log
+
+###
+### test
+###
 predictout=${TEST[outdir]}
 predictfile=${TEST[predict]}
 
