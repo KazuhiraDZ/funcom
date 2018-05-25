@@ -92,4 +92,4 @@ mkdir -p ${TEST[outdir]}
 
 printf "\n" | tee -a $log
 
-# th predict.lua -encoder cpp.encoder -decoder cpp.decoder -beamsize $BEAMSIZE -gpuidx $dev -language cpp
+th predict.lua -encoder cpp.encoder -decoder cpp.decoder -beamsize $BEAMSIZE -gpuidx $dev -language cpp
