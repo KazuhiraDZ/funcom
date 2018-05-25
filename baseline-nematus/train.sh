@@ -53,6 +53,18 @@ echo "config file: $config, log file: $log" | tee -a $log
 exec {BASH_XTRACEFD}>>$log
 set -x
 
+if [[ $(hostname -s) = ash ]]; then
+    printf "ash: source sourceme.sh ...\n"
+    if [ -f /scratch/funcom/sourceme.sh ]; then
+	source /scratch/funcom/sourceme.sh
+    else
+	echo "Cannot find /scratch/funcom/sourceme.sh. Exit."
+	exit 1
+    fi
+else
+    printf "\n***\n***make sure you source sourcme.sh from Alex\n***\n"
+fi
+
 source download_nematus.sh
 
 ###
