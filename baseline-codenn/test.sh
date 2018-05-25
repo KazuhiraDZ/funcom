@@ -119,7 +119,7 @@ else
     start=$(date +%s.%N)
     echo "running codenn/src/model/predict.lua ... " | tee -a $log
     pushd ./codenn/src/model
-    th predict.lua -encoder ${TEST[modeldir]}/cpp.encoder -decoder ${TEST[modeldir]}/cpp.decoder -beamsize ${TEST[beamsize]} -gpuidx $dev -language cpp -outdir $predictout -outfile $predictfile
+    th predict.lua -encoder $cwd/${TEST[modeldir]}/cpp.encoder -decoder $cwd/${TEST[modeldir]}/cpp.decoder -beamsize ${TEST[beamsize]} -gpuidx $dev -language cpp -outdir $predictout -outfile $predictfile
     popd
     end=$(date +%s.%N)
     diff=`show_time $end $start`
