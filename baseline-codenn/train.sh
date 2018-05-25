@@ -64,6 +64,18 @@ exec {BASH_XTRACEFD}>>$cwd/$log
 set -x
 source download_codenn.sh
 
+if [[ $(hostname -s) = ash ]]; then
+    printf "ash: activate lua 5.2 ...\n"
+    if [ -f /scratch/software/torch/install/bin/torch-activate ]; then
+	. /scratch/software/torch/install/bin/torch-activate
+    else
+	echo "Cannot find torch in /scratch/software/torch/install/bin/torch-activate. Exit."
+	exit 1
+    fi
+else
+    printf "\n***\n***make sure you are using lua 5.2\n***\n"
+fi
+
 ###
 ### Parsing the config file
 ###
