@@ -173,12 +173,12 @@ else
     echo "the output directory does not exist or is empty. Good! Creating one."
     mkdir -p $modelout
     start=$(date +%s.%N)
-    echo "running codenn/src/model/run.sh ... " | tee -a $log
+    echo "running codenn/src/model/main.lua ... " | tee -a $log
     pushd ./codenn/src/model
     th ./main.lua -gpuidx $dev -language cpp -outdir $cwd/$modelout
     popd
     end=$(date +%s.%N)
     diff=`show_time $end $start`
-    echo "codenn/src/model/run.sh done: $diff" | tee -a $log
+    echo "codenn/src/model/main.lua done: $diff" | tee -a $log
 fi
 

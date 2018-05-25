@@ -92,4 +92,20 @@ mkdir -p ${TEST[outdir]}
 
 printf "\n" | tee -a $log
 
-th predict.lua -encoder cpp.encoder -decoder cpp.decoder -beamsize $BEAMSIZE -gpuidx $dev -language cpp
+predictout=${TEST[outdir]}
+predictfile=${TEST[predict]}
+
+if [ -f '$predictout/$predictfile']; then
+    echo "$predictout/$predictfile exists! Exit."
+    exit 0
+else
+    mkdir -p $predictout
+    start=$(date +%s.%N)
+    echo "running codenn/src/model/predict.lua ... " | tee -a $log
+    pushd ./codenn/src/model
+    th predict.lua -encoder ${TEST[modeldir]}/cpp.encoder -decoder ${TEST[modeldir]}/cpp.decoder -beamsize ${TEST[beamsize]} -gpuidx $dev -language cpp
+    popd
+    end=$(date +%s.%N)
+    diff=`show_time $end $start`
+    echo "codenn/src/model/predict.lua done: $diff" | tee -a $log
+fi
