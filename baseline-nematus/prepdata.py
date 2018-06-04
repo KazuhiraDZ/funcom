@@ -21,20 +21,19 @@ def createvocab( origvocab ):
     vocab['<s>']  = 2
     vocab['</s>'] = 3
     
-    i = 4
+    offset = 4
     for word, count in origvocab.items():
         if word == 'eos' or word == 'UNK' or word == '<s>' or word == '</s>':
             continue
         
-        vocab[word] = i
-        i += 1
+        vocab[word] = count + offset
 
     return vocab
 
 
 def vocabfiles( srctok, tgttok, srcoutfile, tgtoutfile ):
-    srcvocab = srctok.word_index # Tokenizer prepared by Keras should have been sorted by the word counts (in the reversed order)
-    tgtvocab = tgttok.word_index
+    srcvocab = srctok.w2i
+    tgtvocab = tgttok.w2i
 
     srcvocab = createvocab(srcvocab)
     tgtvocab = createvocab(tgtvocab)
@@ -95,21 +94,21 @@ def getdata_from_alldata(alldata, field_src, field_tgt, index_word_src, index_wo
             outf.write(line+'\n')
 
 
-def validfiles(alldata, index_word_src, index_word_tgt, srcoutfile, tgtoutfile):
+def validfiles(alldata, field_src, field_tgt, index_word_src, index_word_tgt, srcoutfile, tgtoutfile):
     srclist = list()
     tgtlist = list()
 
-    keys = sorted(alldata['coms_train_seqs'].keys())
+    keys = sorted(alldata[field_tgt].keys())
     random.shuffle(keys)
 
     cnt = 0
     for fid in keys:
         cnt += 1
-        src = alldata['dats_train_seqs'][fid]
+        src = alldata[field_src][fid]
         src_str = print_seq_str(src, index_word_src, 'src')
         srclist.append(src_str)
 
-        tgt = alldata['coms_train_seqs'][fid]
+        tgt = alldata[field_tgt][fid]
         tgt_str = print_seq_str(tgt, index_word_tgt, 'tgt')
         tgtlist.append(tgt_str)
 
@@ -154,15 +153,11 @@ def parse_config(configfile):
     
     dataprep = parse_config_var(config, 'dataprep')
     outdir   = parse_config_var(config, 'outdir')
-    # src_vocabsize = parse_config_var(config, 'vocabsize_src')
-    # tgt_vocabsize = parse_config_var(config, 'vocabsize_tgt')
     if not os.path.exists(outdir):
         os.makedirs(outdir)
     
     return {'dataprep': dataprep,
             'outdir'  : outdir,}
-            # 'vocabsize_src':src_vocabsize,
-            # 'vocabsize_tgt':tgt_vocabsize,}
 
 def check_outputfiles(outputfiles):
     for key in outputfiles:
@@ -211,15 +206,10 @@ if __name__ == '__main__':
     
     ## loading files
     srctok = pickle.load(open(srctokfile, 'rb'), encoding="UTF-8")
-    index_word_src = {y:x for x,y in srctok.word_index.items()}
+    index_word_src = srctok.i2w
     tgttok = pickle.load(open(tgttokfile, 'rb'), encoding="UTF-8")
-    index_word_tgt = {y:x for x,y in tgttok.word_index.items()}
+    index_word_tgt = tgttok.i2w
     
-    # if "\n" in index_word_src[208299]:
-    #     logger.info("word has \\n: " +  str(srctok.word_index["else\n"]))
-    # else:
-    #     logger.info("word: " +  str(srctok.word_index["else"]))
-
     alldata = pickle.load(open(alldatafile, 'rb'))
     
     # generating vocab files
@@ -233,7 +223,7 @@ if __name__ == '__main__':
     # generating valid data files
     # like the alpha version, for now, we use a subset from the training set as the valid set
     logger.info("creating the valid data files...")
-    validfiles(alldata, index_word_src, index_word_tgt, outputfiles['srcvalidfile'], outputfiles['tgtvalidfile'])
+    validfiles(alldata, 'dats_train_seqs', 'coms_train_seqs', index_word_src, index_word_tgt, outputfiles['srcvalidfile'], outputfiles['tgtvalidfile'])
 
     # generating test data files
     logger.info("creating the test data files...")
