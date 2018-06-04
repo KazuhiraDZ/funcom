@@ -165,9 +165,19 @@ def check_outputfiles(outputfiles):
         if not os.path.isfile(fname):
             return
 
-    logger.info("!!!!\n!!!!the data files exists. Exit.\n!!!!")
+    logger.error("!!!!\n!!!!the data files exists. Exit.\n!!!!")
     sys.exit()
-    
+
+def check_two_files(file1, file2):
+    num_lines1 = sum(1 for line in open(file1))
+    num_lines2 = sum(1 for line in open(file2))
+    if num_lines1 != num_lines2:
+        logger.error("\n!!!!\n!!!!" + file1 + " has " + str(num_lines1) + " lines while " +
+                     file2 + " has " + str(num_lines2) + " lines. Exit." +"\n!!!!\n")
+        sys.exit()
+
+    return
+
 ########
 ######## Entry point
 ########
@@ -225,14 +235,17 @@ if __name__ == '__main__':
     # generating training data files
     logger.info("creating the training data files...")
     getdata_from_alldata(alldata, 'dats_raw', 'coms_train_seqs', index_word_src, index_word_tgt, outputfiles['srctrainfile'], outputfiles['tgttrainfile'])
+    check_two_files(outputfiles['srctrainfile'], outputfiles['tgttrainfile'])
 
     # generating valid data files
     # like the alpha version, for now, we use a subset from the training set as the valid set
     logger.info("creating the valid data files...")
     validfiles(alldata, 'dats_raw', 'coms_train_seqs', index_word_src, index_word_tgt, outputfiles['srcvalidfile'], outputfiles['tgtvalidfile'])
+    check_two_files(outputfiles['srcvalidfile'], outputfiles['tgtvalidfile'])
 
     # generating test data files
     logger.info("creating the test data files...")
     getdata_from_alldata(alldata, 'dats_raw', 'coms_test_seqs', index_word_src, index_word_tgt, outputfiles['srctestfile'], outputfiles['tgttestfile'])
+    check_two_files(outputfiles['srctestfile'], outputfiles['tgttestfile'])
 
     logger.info("Finished.")
