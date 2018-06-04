@@ -108,10 +108,13 @@ echo "CODENN_DIR: ${CODENN_DIR}, CODENN_WORK: ${CODENN_WORK}" | tee -a $log
 ###
 ### test
 ###
+local encoders=($(ls -1v $cwd/${TEST[modeldir]}/cpp.encoder.e*))
+local decoders=($(ls -1v $cwd/${TEST[modeldir]}/cpp.decoder.e*))
+
 predictout=${TEST[outdir]}
 predictfile=${TEST[predict]}
 
-if [ -f '$predictout/$predictfile']; then
+if [ -f '$predictout/$predictfile' ]; then
     echo "$predictout/$predictfile exists! Exit."
     exit 0
 else
@@ -119,7 +122,7 @@ else
     start=$(date +%s.%N)
     echo "running codenn/src/model/predict.lua ... " | tee -a $log
     pushd ./codenn/src/model
-    th predict.lua -encoder $cwd/${TEST[modeldir]}/cpp.encoder -decoder $cwd/${TEST[modeldir]}/cpp.decoder -beamsize ${TEST[beamsize]} -gpuidx $dev -language cpp -outdir $predictout -outfile $predictfile
+    th predict.lua -encoder ${encoders[-1]} -decoder ${decoders[-1]} -beamsize ${TEST[beamsize]} -gpuidx $dev -language cpp -outdir $predictout -outfile $predictfile
     popd
     end=$(date +%s.%N)
     diff=`show_time $end $start`
