@@ -14,5 +14,5 @@ Usage:
    most likely, you need to change ```dataprep``` under ```[PREPDATA]``` to the folder that has alldata.pkl, comstokenizer.pkl and datstokenizer.pkl
 2) ```bash train.sh -c codenn.ini -d 1``` \
    run ```bash train.sh -h``` to see other options \
-   ** Note that GPU device id starts from 1 **
+   **Note that GPU device id starts from 1**
 
