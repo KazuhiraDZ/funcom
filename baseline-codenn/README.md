@@ -12,5 +12,7 @@ tested on Ubuntu 16 and Debian GNU/Linux 8.10
 Usage:
 1) modify the codenn.ini based on the above workflow image.\
    most likely, you need to change ```dataprep``` under ```[PREPDATA]``` to the folder that has alldata.pkl, comstokenizer.pkl and datstokenizer.pkl
-2) ```bash train.sh -c codenn.ini```
+2) ```bash train.sh -c codenn.ini -d 1``` \
+   run ```bash train.sh -h``` to see other options \
+   ** Note that GPU device id starts from 1 **
 
