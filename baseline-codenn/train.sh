@@ -73,7 +73,12 @@ if [[ $(hostname -s) = ash ]]; then
 	exit 1
     fi
 else
-    printf "\n***\n***make sure you are using lua 5.2\n***\n"
+    if [ -f /scratch/software/torch/install/bin/torch-activate ]; then
+	. /scratch/software/torch/install/bin/torch-activate
+    else
+	echo "Cannot find torch in /scratch/software/torch/install/bin/torch-activate."
+	printf "\n***\n***make sure you are using lua 5.2\n***\n"    
+    fi
 fi
 
 ###
@@ -125,6 +130,12 @@ echo "codenn/src/cpp/createParser.sh done" | tee -a $log
 
 start=$(date +%s.%N)
 echo "running prepdata.py ... " | tee -a $log
+if [ -f /scratch/funcom/sourceme.sh ]; then
+    source /scratch/funcom/sourceme.sh
+else
+    echo "Cannot find /scratch/funcom/sourceme.sh to load the Tokenizer. Exit."
+    exit 1
+fi
 python3 ./prepdata.py --config $config 2>&1 | tee -a $log
 end=$(date +%s.%N)
 diff=`show_time $end $start`
