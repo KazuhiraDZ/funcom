@@ -48,15 +48,8 @@ def vocabfiles( srctok, tgttok, srcoutfile, tgtoutfile ):
 
 def strip_newline(word_str):
     stripped_str = word_str
-    
-    if "\n" in word_str or "\r" in word_str or "\n\r" in word_str or "\r\n" in word_str:
-        # temporary disable the error
-        # logger.error("get a new line from index_word: " + word_str + "word id: " + str(word) + " in " + index_type)
-        # sys.exit(1)
-        stripped_str = re.sub(r"[\r\n]", "\\n", word_str)
-
-    if "\t" in stripped_str:
-        stripped_str = re.sub(r"\t", " ", stripped_str)
+    stripped_str = re.sub(r"[\r\n]", "\\n", word_str)
+    stripped_str = re.sub(r"\t", " ", stripped_str)
         
     return stripped_str.strip()
     
@@ -79,7 +72,7 @@ def getdata_from_alldata(alldata, field_src, field_tgt, index_word_src, index_wo
     
     for fid in sorted(alldata[field_tgt].keys()):
         src = alldata[field_src][fid]
-        src_str = re.sub(r"\t", " ", src)
+        src_str = strip_newline(src_str)
         srclist.append(src_str)
 
         tgt = alldata[field_tgt][fid]
