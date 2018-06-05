@@ -48,7 +48,7 @@ def vocabfiles( srctok, tgttok, srcoutfile, tgtoutfile ):
 
 def strip_newline(word_str):
     stripped_str = word_str
-    stripped_str = re.sub(r"[\r\n]", "\\n", word_str)
+    stripped_str = re.sub(r"[\r\n]", "\\\\<nl>", word_str)
     stripped_str = re.sub(r"\t", " ", stripped_str)
         
     return stripped_str.strip()
@@ -72,7 +72,7 @@ def getdata_from_alldata(alldata, field_src, field_tgt, index_word_src, index_wo
     
     for fid in sorted(alldata[field_tgt].keys()):
         src = alldata[field_src][fid]
-        src_str = strip_newline(src_str)
+        src_str = strip_newline(src)
         srclist.append(src_str)
 
         tgt = alldata[field_tgt][fid]
@@ -101,7 +101,7 @@ def validfiles(alldata, field_src, field_tgt, index_word_src, index_word_tgt, sr
     for fid in keys:
         cnt += 1
         src = alldata[field_src][fid]
-        src_str = re.sub(r"\t", " ", src)
+        src_str = strip_newline(src)        
         srclist.append(src_str)
 
         tgt = alldata[field_tgt][fid]
@@ -174,7 +174,7 @@ def check_two_files(file1, file2):
     if num_lines1 != num_lines2:
         logger.error("\n!!!!\n!!!!" + file1 + " has " + str(num_lines1) + " lines while " +
                      file2 + " has " + str(num_lines2) + " lines. Exit." +"\n!!!!\n")
-        sys.exit()
+        sys.exit(1)
 
     return
 

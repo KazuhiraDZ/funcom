@@ -137,6 +137,11 @@ else
     exit 1
 fi
 python3 ./prepdata.py --config $config 2>&1 | tee -a $log
+retVal=$?
+if [ $retVal -ne 0 ]; then
+    echo "Error in prepdata.py"
+    exit $retVal
+fi
 end=$(date +%s.%N)
 diff=`show_time $end $start`
 echo "prepdata.py done: $diff" | tee -a $log
