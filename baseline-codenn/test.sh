@@ -85,24 +85,29 @@ eval "$(cat $config  | python ./ini2arr.py)"
 checkconfig 'CODENN' 'workdir'
 checkconfig 'TEST' 'modeldir'
 checkconfig 'TEST' 'beamsize'
-checkconfig 'TEST' 'datadir'
 checkconfig 'TEST' 'predict'
 checkconfig 'TEST' 'outdir'
-mkdir -p ${TEST[outdir]}
+
+function absolutepath(){
+    local inpath=$1
+    if [[ "$inpath" = /* ]]; then
+        echo "$inpath"
+    else
+        echo "$cwd/$inpath"
+    fi
+}
+
+workdir=$(absolutepath ${CODENN[workdir]})
+predictout=$(absolutepath ${TEST[outdir]})
+
+mkdir -p $predictout
 printf "\n" | tee -a $log
 
 ###
 ### setting up environment paths
 ###
 export CODENN_DIR="$cwd/codenn"
-
-workdir=${CODENN[workdir]}
-if [[ "$DIR" = /* ]]; then
-    export CODENN_WORK=$workdir
-else
-    # if the workdir is a relative path, change it to the absolute path
-    export CODENN_WORK=$cwd/$workdir
-fi
+export CODENN_WORK=$workdir
 echo "CODENN_DIR: ${CODENN_DIR}, CODENN_WORK: ${CODENN_WORK}" | tee -a $log
 
 ###
@@ -111,7 +116,6 @@ echo "CODENN_DIR: ${CODENN_DIR}, CODENN_WORK: ${CODENN_WORK}" | tee -a $log
 local encoders=($(ls -1v $cwd/${TEST[modeldir]}/cpp.encoder.e*))
 local decoders=($(ls -1v $cwd/${TEST[modeldir]}/cpp.decoder.e*))
 
-predictout=${TEST[outdir]}
 predictfile=${TEST[predict]}
 
 if [ -f '$predictout/$predictfile' ]; then
@@ -121,6 +125,7 @@ else
     mkdir -p $predictout
     start=$(date +%s.%N)
     echo "running codenn/src/model/predict.lua ... " | tee -a $log
+    echo "output file: $predictout/$predictfile"
     pushd ./codenn/src/model
     th predict.lua -encoder ${encoders[-1]} -decoder ${decoders[-1]} -beamsize ${TEST[beamsize]} -gpuidx $dev -language cpp -outdir $predictout -outfile $predictfile
     popd

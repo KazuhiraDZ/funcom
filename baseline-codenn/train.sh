@@ -111,7 +111,7 @@ export PYTHONPATH="${PYTHONPATH}:$cwd/codenn/src/"
 export CODENN_DIR="$cwd/codenn"
 
 workdir=${CODENN[workdir]}
-if [[ "$DIR" = /* ]]; then
+if [[ "$workdir" = /* ]]; then
     export CODENN_WORK=$workdir
 else
     # if the workdir is a relative path, change it to the absolute path
