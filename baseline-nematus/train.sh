@@ -71,6 +71,7 @@ source download_nematus.sh
 ### prepare the data set
 ###
 start=$(date +%s.%N)
+echo "running prepdata.py ... " | tee -a $log
 python3 prepdata.py --config $config 2>&1 | tee -a $log
 end=$(date +%s.%N)
 diff=`show_time $end $start`
