@@ -59,8 +59,14 @@ def print_seq_str(seq, index_word, index_type):
     for word in seq:
         if word == 0: # for the padding in the dat sequences
             break
+
+        word_str = index_word[word]
+        if word_str == '<s>':
+            continue
+        if word_str == '</s>':
+            break
         
-        word_str = strip_newline(index_word[word])
+        word_str = strip_newline(word_str)
         print_str += word_str + ' '
         
     return print_str
