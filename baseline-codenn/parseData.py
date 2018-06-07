@@ -60,11 +60,11 @@ def output(outputfile, inputfile_src, inputfile_tgt):
     with open(inputfile_src, 'r') as src_f, open(inputfile_tgt, 'r') as tgt_f:
         for src_line, tgt_line in izip(src_f, tgt_f):
             src_line=src_line.strip()
-            tgt_line=tgt_line.strip()
+            rid, nl=tgt_line.strip().split('\t')
             try:
                 parseCpp(src_line)
                 try:
-                    f.write('\t'.join([str(0), str(0), tgt_line, src_line, "0"]) + '\n')
+                    f.write('\t'.join([rid, rid, nl.strip(), src_line, "0"]) + '\n')
                 except:
                     print("error")
             except:
@@ -82,11 +82,11 @@ if __name__ == '__main__':
     
     params = {
       "trainfile_src" : "train.src.txt",
-      "trainfile_tgt" : "train.tgt.txt",
+      "trainfile_tgt" : "train.tgt.txt.id",
       "validfile_src" : "valid.src.txt",
-      "validfile_tgt" : "valid.tgt.txt",
+      "validfile_tgt" : "valid.tgt.txt.id",
       "testfile_src"  : "test.src.txt",
-      "testfile_tgt"  : "test.tgt.txt"}
+      "testfile_tgt"  : "test.tgt.txt.id"}
 
     for key in params:
       params[key] = os.path.join(outputdir, params[key])
