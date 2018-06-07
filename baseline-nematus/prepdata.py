@@ -73,8 +73,9 @@ def print_seq_str(seq, index_word, index_type):
 def getdata_from_alldata(alldata, field_src, field_tgt, index_word_src, index_word_tgt, srcoutfile, tgtoutfile):
     srclist = list()
     tgtlist = list()
+    fidlist = list()
     
-    for fid in sorted(alldata[field_src].keys()):
+    for fid in sorted(alldata[field_tgt].keys()):
         src = alldata[field_src][fid]
         src_str = print_seq_str(src, index_word_src, field_src)
         srclist.append(src_str)
@@ -83,20 +84,32 @@ def getdata_from_alldata(alldata, field_src, field_tgt, index_word_src, index_wo
         tgt_str = print_seq_str(tgt, index_word_tgt, field_tgt)
         tgtlist.append(tgt_str)
 
+        fidlist.append(fid)
+        
+
     logger.info("srclist: " + str(len(srclist)) + ", tgtlist: " + str(len(tgtlist)))
     
     with open(srcoutfile, mode='wt', encoding='utf-8') as outf:
         for line in srclist:
             outf.write(line+'\n')
 
+    with open(srcoutfile+'.id', mode='wt', encoding='utf-8') as outf:
+        for fid, line in zip(fidlist, srclist):
+            outf.write(str(fid)+'\t'+line+'\n')
+
     with open(tgtoutfile, mode='wt', encoding='utf-8') as outf:
         for line in tgtlist:
             outf.write(line+'\n')
+
+    with open(tgtoutfile+'.id', mode='wt', encoding='utf-8') as outf:
+        for fid, line in zip(fidlist, tgtlist):
+            outf.write(str(fid)+'\t'+line+'\n')
 
 
 def validfiles(alldata, field_src, field_tgt, index_word_src, index_word_tgt, srcoutfile, tgtoutfile):
     srclist = list()
     tgtlist = list()
+    fidlist = list()
 
     keys = sorted(alldata[field_tgt].keys())
     random.shuffle(keys)
@@ -112,18 +125,28 @@ def validfiles(alldata, field_src, field_tgt, index_word_src, index_word_tgt, sr
         tgt_str = print_seq_str(tgt, index_word_tgt, 'tgt')
         tgtlist.append(tgt_str)
 
+        fidlist.append(fid)
+
         if cnt >= 3000:
             break
 
     with open(srcoutfile, mode='wt', encoding='utf-8') as outf:
-        outf.write('\n'.join(srclist))
-        outf.write('\n')
+        for line in srclist:
+            outf.write(line+'\n')
+
+    with open(srcoutfile+'.id', mode='wt', encoding='utf-8') as outf:
+        for fid, line in zip(fidlist, srclist):
+            outf.write(str(fid)+'\t'+line+'\n')
 
     with open(tgtoutfile, mode='wt', encoding='utf-8') as outf:
-        outf.write('\n'.join(tgtlist))
-        outf.write('\n')
+        for line in tgtlist:
+            outf.write(line+'\n')
 
-        
+    with open(tgtoutfile+'.id', mode='wt', encoding='utf-8') as outf:
+        for fid, line in zip(fidlist, tgtlist):
+            outf.write(str(fid)+'\t'+line+'\n')
+
+
 def parse_args():
     parser = argparse.ArgumentParser(description='prepare data files for nematus to run.')
     parser.add_argument('--config', nargs=1, help='the config file, see nematus.ini as an example', required=True)
