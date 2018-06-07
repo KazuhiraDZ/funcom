@@ -13,6 +13,8 @@ tested on Ubuntu 16 and Debian GNU/Linux 8.10 with **/scratch/funcom/data/D_001*
 
 **Note2** we assume you have the ```/scratch/funcom/sourceme.sh``` (set up the python path for Python Class: ```Tokenizer```)
 
+**Note3** the test set entries are sorted based on fid in the [dataset](https://github.com/mcmillco/funcom/tree/master/alpha/dataprep). (so the predictions are sorted, too.)
+
 **Usage**:
 1) modify the nematus.ini based on the above workflow image.\
    most likely, you need to change the following entries:
@@ -23,7 +25,7 @@ tested on Ubuntu 16 and Debian GNU/Linux 8.10 with **/scratch/funcom/data/D_001*
 3) ```bash test.sh -c nematus.ini```\
    ```bash test.sh -h``` to display other options
 
-Notes:
+Extra notes:
 1) this nematus does not support pre-trained embedding. (compared to the alpha version where we use a pre-trained embedding)
 2) like the alpha version, **for now**, we use a subset from the training set as the valid set
 3) uses the same vocab size for tgt sequences as the alpha model: for tgt sequences, 10449
