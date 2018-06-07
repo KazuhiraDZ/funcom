@@ -176,11 +176,16 @@ def parse_config(configfile):
     
     dataprep = parse_config_var(config, 'dataprep')
     outdir   = parse_config_var(config, 'outdir')
+    alldatapkl = 'alldata.pkl'
+    if config['PREPDATA']['alldatapkl']:
+        alldatapkl = config['PREPDATA']['alldatapkl']
+        
     if not os.path.exists(outdir):
         os.makedirs(outdir)
     
     return {'dataprep': dataprep,
-            'outdir'  : outdir,}
+            'outdir'  : outdir,
+            'alldatapkl' : alldatapkl}
 
 def check_outputfiles(outputfiles):
     for key in outputfiles:
@@ -204,13 +209,14 @@ if __name__ == '__main__':
     config    = parse_config(args['configfile'])
     inputdir  = config['dataprep']
     outputdir = config['outdir']
+    alldatapkl = config['alldatapkl']
     # vocabsize_src = config['vocabsize_src']
     # vocabsize_tgt = config['vocabsize_tgt']
 
     ## input files
     srctokfile=os.path.join(inputdir, 'datstokenizer.pkl')
     tgttokfile=os.path.join(inputdir, 'comstokenizer.pkl')
-    alldatafile=os.path.join(inputdir, 'alldata.pkl')
+    alldatafile=os.path.join(inputdir, alldatapkl)
     
     ## output files
     outputfiles={
