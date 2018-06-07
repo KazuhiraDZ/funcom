@@ -55,6 +55,25 @@ def check_outputfiles(outputfiles):
     logger.info("!!!!\n!!!!the data files exists. Exit.\n!!!!")
     sys.exit()
     
+def output(outputfile, inputfile_src, inputfile_tgt):
+    f = open(outputfile, 'w')
+    with open(inputfile_src, 'r') as src_f, open(inputfile_tgt, 'r') as tgt_f:
+        for src_line, tgt_line in izip(src_f, tgt_f):
+            src_line=src_line.strip()
+            tgt_line=tgt_line.strip()
+            try:
+                parseCpp(src_line)
+                try:
+                    f.write('\t'.join([str(0), str(0), tgt_line, src_line, "0"]) + '\n')
+                except:
+                    print("error")
+            except:
+                pass
+
+      
+    f.close()
+    return
+
 if __name__ == '__main__':
 
     args      = parse_args()
@@ -81,25 +100,6 @@ if __name__ == '__main__':
         
     check_outputfiles(outputfiles)
 
-    def output(outputfile, inputfile_src, inputfile_tgt):
-      f = open(outputfile, 'w')
-      with open(inputfile_src, 'r') as src_f, open(inputfile_tgt, 'r') as tgt_f:
-        for src_line, tgt_line in izip(src_f, tgt_f):
-          src_line=src_line.strip()
-          tgt_line=tgt_line.strip()
-          try:
-            parseCpp(src_line)
-            try:
-              f.write('\t'.join(['0', '0', tgt_line, src_line, "0"]) + '\n')
-            except:
-              print("error")
-          except:
-            pass
-    
-          
-      f.close()
-      return
-    
     # Create training and validation and test sets
     output(outputfiles['train'], params['trainfile_src'], params['trainfile_tgt'])
     output(outputfiles['valid'], params['validfile_src'], params['validfile_tgt'])
