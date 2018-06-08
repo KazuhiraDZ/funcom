@@ -22,7 +22,7 @@ while getopts ":c:d:l:h" opt; do
 	config=$OPTARG
 	;;
     d )
-	dev=$OPTARG
+	dev=$((OPTARG+1)) # codenn (which uses lua torch) specify GPU device ids from 1
 	;;
     l )
 	log=$OPTARG
