@@ -58,28 +58,13 @@ if ! $passarg ;then
 fi
 
 cwd=$(pwd)
+log=$cwd/$log
 
 echo "config file: $config, log file: $log" | tee -a $log
-exec {BASH_XTRACEFD}>>$cwd/$log
+exec {BASH_XTRACEFD}>>$log
 set -x
 source download_codenn.sh
-
-if [[ $(hostname -s) = ash ]]; then
-    printf "ash: activate lua 5.2 ...\n"
-    if [ -f /scratch/software/torch/install/bin/torch-activate ]; then
-	. /scratch/software/torch/install/bin/torch-activate
-    else
-	echo "Cannot find torch in /scratch/software/torch/install/bin/torch-activate. Exit."
-	exit 1
-    fi
-else
-    if [ -f /scratch/software/torch/install/bin/torch-activate ]; then
-	. /scratch/software/torch/install/bin/torch-activate
-    else
-	echo "Cannot find torch in /scratch/software/torch/install/bin/torch-activate."
-	printf "\n***\n***make sure you are using lua 5.2\n***\n"    
-    fi
-fi
+source activate_lua.sh
 
 ###
 ### Parsing the config file
@@ -124,7 +109,7 @@ echo "PYTHONPATH: $PYTHONPATH, CODENN_DIR: ${CODENN_DIR}, CODENN_WORK: ${CODENN_
 ###
 echo "running codenn/src/cpp/createParser ... " | tee -a $log
 pushd ./codenn/src/cpp
-bash createParser.sh 2>&1 | tee -a $cwd/$log
+bash createParser.sh 2>&1 | tee -a $log
 popd
 echo "codenn/src/cpp/createParser.sh done" | tee -a $log
 
@@ -168,7 +153,7 @@ if $missingfile ;then
     start=$(date +%s.%N)
     echo "running codenn/src/model/buildData.sh ... " | tee -a $log
     pushd ./codenn/src/model
-    bash ./buildData.sh  2>&1 | tee -a $cwd/$log
+    bash ./buildData.sh  2>&1 | tee -a $log
     popd
     end=$(date +%s.%N)
     diff=`show_time $end $start`
