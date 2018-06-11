@@ -86,11 +86,30 @@ else
 fi
 
 start=$(date +%s.%N)
-if [ -z "$dev" ]; then
-    bash test_nmt.sh "$modelfiles" ${TEST[datadir]}/test.src.txt ${TEST[outdir]}/${TEST[predict]} ${TEST[modeldir]}/model.npz.json 2>&1 | tee -a $log
-else
-    CUDA_VISIBLE_DEVICES=$dev bash test_nmt.sh "$modelfiles" ${TEST[datadir]}/test.src.txt ${TEST[outdir]}/${TEST[predict]} ${TEST[modeldir]}/model.npz.json 2>&1 | tee -a $log
+function runtest(){
+    local testfile=$1
+    echo "$testfile"
+    if [ -z "$dev" ]; then
+        bash test_nmt.sh "$modelfiles" $testfile ${testfile}.predict ${TEST[modeldir]}/model.npz.json 2>&1 | tee -a $log
+    else
+        CUDA_VISIBLE_DEVICES=$dev bash test_nmt.sh "$modelfiles" $testfile ${testfile}.predict ${TEST[modeldir]}/model.npz.json 2>&1 | tee -a $log
+    fi    
+}
+rm -fr ${TEST[datadir]}/testsplitfiles
+mkdir -p ${TEST[datadir]}/testsplitfiles
+if [ -f ${TEST[outdir]}/${TEST[predict]} ]; then
+    mv ${TEST[outdir]}/${TEST[predict]} "${TEST[outdir]}/${TEST[predict]}".old.$today
 fi
+rm -f "${TEST[outdir]}/${TEST[predict]}".duplicate
+
+split -a 4 -d -l 3000 ${TEST[datadir]}/test.src.txt ${TEST[datadir]}/testsplitfiles/test.src.txt_
+for filename in ${TEST[datadir]}/testsplitfiles/test.src.txt_*; do
+    echo "running nematus on $filename ..."
+    runtest "$filename";
+    cat ${filename}.predict >> ${TEST[outdir]}/${TEST[predict]}
+    cat $filename >> "${TEST[outdir]}/${TEST[predict]}".duplicate
+done
+
 end=$(date +%s.%N)
 diff=`show_time $end $start`
 echo "test: $diff" | tee -a $log
