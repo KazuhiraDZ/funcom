@@ -177,7 +177,7 @@ def parse_config(configfile):
     dataprep = parse_config_var(config, 'dataprep')
     outdir   = parse_config_var(config, 'outdir')
     alldatapkl = 'alldata.pkl'
-    if config['PREPDATA']['alldatapkl']:
+    if 'alldatapkl' in config['PREPDATA']:
         alldatapkl = config['PREPDATA']['alldatapkl']
         
     if not os.path.exists(outdir):
