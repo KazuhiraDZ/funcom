@@ -3,7 +3,6 @@ import os
 import time, logging, sys
 
 import antlr4
-from cpp.CppTemplate import parseCpp
 import re
 import pdb
 import pickle
@@ -41,10 +40,12 @@ def parse_config(configfile):
     config.read(configfile)
     
     outdir   = parse_config_var(config, 'outdir')
+    lang     = parse_config_var(config, 'lang')
     if not os.path.exists(outdir):
         os.makedirs(outdir)
     
-    return {'outdir'  : outdir,}
+    return {'outdir'  : outdir,
+            'lang'    : lang,}
 
 def check_outputfiles(outputfiles):
     for key in outputfiles:
@@ -55,14 +56,14 @@ def check_outputfiles(outputfiles):
     logger.info("!!!!\n!!!!the data files exists. Exit.\n!!!!")
     sys.exit()
     
-def output(outputfile, inputfile_src, inputfile_tgt):
+def output(outputfile, inputfile_src, inputfile_tgt, parsefunc):
     f = open(outputfile, 'w')
     with open(inputfile_src, 'r') as src_f, open(inputfile_tgt, 'r') as tgt_f:
         for src_line, tgt_line in izip(src_f, tgt_f):
             src_line=src_line.strip()
             rid, nl=tgt_line.strip().split('\t')
             try:
-                parseCpp(src_line)
+                parsefunc(src_line)
                 try:
                     f.write('\t'.join([rid, rid, nl.strip(), src_line, "0"]) + '\n')
                 except:
@@ -79,7 +80,19 @@ if __name__ == '__main__':
     args      = parse_args()
     config    = parse_config(args['configfile'])
     outputdir = config['outdir'] # this is the output dir for prepdata_nematus, which is the input for this script.
-    
+    lang      = config['lang']
+
+    parsefunc = None
+    if lang == 'cpp':
+        from cpp.CppTemplate import parseCpp
+        parsefunc = parseCpp
+    elif lang == 'java':
+        from java.JavaTemplate import parseJava
+        parsefunc = parseJava
+    else:
+        logger.error("!!!!\n!!!!Cannot recognize the language: $lang. Choose 'java' or 'cpp'. Exit.\n!!!!")
+        sys.exit(1)
+
     params = {
       "trainfile_src" : "train.src.txt",
       "trainfile_tgt" : "train.tgt.txt.id",
@@ -101,6 +114,6 @@ if __name__ == '__main__':
     check_outputfiles(outputfiles)
 
     # Create training and validation and test sets
-    output(outputfiles['train'], params['trainfile_src'], params['trainfile_tgt'])
-    output(outputfiles['valid'], params['validfile_src'], params['validfile_tgt'])
-    output(outputfiles['test'], params['testfile_src'], params['testfile_tgt'])
+    output(outputfiles['train'], params['trainfile_src'], params['trainfile_tgt'], parsefunc)
+    output(outputfiles['valid'], params['validfile_src'], params['validfile_tgt'], parsefunc)
+    output(outputfiles['test'], params['testfile_src'], params['testfile_tgt'], parsefunc)

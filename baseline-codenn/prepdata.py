@@ -54,7 +54,7 @@ def strip_newline(word_str):
     return stripped_str.strip()
     
 
-def print_seq_str(seq, index_word, index_type):
+def print_seq_str(seq, index_word):
     print_str = ''
     for word in seq:
         if word == 0: # for the padding in the dat sequences
@@ -72,16 +72,16 @@ def print_seq_str(seq, index_word, index_type):
     return print_str
 
 
-def getdata_from_alldata(alldata, field_src, field_tgt, index_word_src, index_word_tgt, srcoutfile, tgtoutfile):
+def getdata_from_alldata(srcdict, tgtdict, index_word_src, index_word_tgt, srcoutfile, tgtoutfile):
     srclist, tgtlist, fidlist = (list() for i in range(3))
     
-    for fid in sorted(alldata[field_tgt].keys()):
-        src = alldata[field_src][fid]
+    for fid in sorted(tgtdict.keys()):
+        src = srcdict[fid]
         src_str = strip_newline(src)
         srclist.append(src_str)
 
-        tgt = alldata[field_tgt][fid]
-        tgt_str = print_seq_str(tgt, index_word_tgt, field_tgt)
+        tgt = tgtdict[fid]
+        tgt_str = print_seq_str(tgt, index_word_tgt)
         tgtlist.append(tgt_str)
 
         fidlist.append(fid)
@@ -106,21 +106,21 @@ def getdata_from_alldata(alldata, field_src, field_tgt, index_word_src, index_wo
             outf.write(str(fid)+'\t'+line+'\n')
 
             
-def validfiles(alldata, field_src, field_tgt, index_word_src, index_word_tgt, srcoutfile, tgtoutfile):
+def validfiles(srcdict, tgtdict, index_word_src, index_word_tgt, srcoutfile, tgtoutfile):
     srclist, tgtlist, fidlist = (list() for i in range(3))
 
-    keys = sorted(alldata[field_tgt].keys())
+    keys = sorted(tgtdict.keys())
     random.shuffle(keys)
 
     cnt = 0
     for fid in keys:
         cnt += 1
-        src = alldata[field_src][fid]
+        src = srcdict[fid]
         src_str = strip_newline(src)        
         srclist.append(src_str)
 
-        tgt = alldata[field_tgt][fid]
-        tgt_str = print_seq_str(tgt, index_word_tgt, 'tgt')
+        tgt = tgtdict[fid]
+        tgt_str = print_seq_str(tgt, index_word_tgt)
         tgtlist.append(tgt_str)
 
         fidlist.append(fid)
@@ -146,9 +146,9 @@ def validfiles(alldata, field_src, field_tgt, index_word_src, index_word_tgt, sr
 
         
 def parse_args():
-    parser = argparse.ArgumentParser(description='prepare data files for nematus to run.')
-    parser.add_argument('--config', nargs=1, help='the config file, see nematus.ini as an example', required=True)
-    args = parser.parse_args()        
+    parser = argparse.ArgumentParser(description='prepare data files for codenn to run.')
+    parser.add_argument('--config', nargs=1, help='the config file, see codenn.ini as an example', required=True)
+    args = parser.parse_args()
     configfile = args.config[0]
     logger.info("config file: " + configfile)
     
@@ -159,7 +159,7 @@ def parse_config_var(config, var_name):
         logger.error("config file does not have section: PREPDATA. Exit.")
         sys.exit(1)
         
-    if config['PREPDATA'][var_name]:
+    if var_name in config['PREPDATA']:
         var_val = config['PREPDATA'][var_name]
         logger.info("parse config: " + var_name + "=" + var_val)
         return var_val
@@ -174,15 +174,21 @@ def parse_config(configfile):
     
     dataprep = parse_config_var(config, 'dataprep')
     outdir   = parse_config_var(config, 'outdir')
-    # src_vocabsize = parse_config_var(config, 'vocabsize_src')
-    # tgt_vocabsize = parse_config_var(config, 'vocabsize_tgt')
+    alldatapkl = 'alldata.pkl'
+    rawdatspkl = ''
+    if 'alldatapkl' in config['PREPDATA']:
+        alldatapkl = config['PREPDATA']['alldatapkl']
+    
+    if 'rawdatspkl' in config['PREPDATA']:
+        rawdatspkl = config['PREPDATA']['rawdatspkl']
+        
     if not os.path.exists(outdir):
         os.makedirs(outdir)
     
     return {'dataprep': dataprep,
-            'outdir'  : outdir,}
-            # 'vocabsize_src':src_vocabsize,
-            # 'vocabsize_tgt':tgt_vocabsize,}
+            'outdir'  : outdir,
+            'alldatapkl' : alldatapkl,
+            'rawdatspkl' : rawdatspkl,}
 
 def check_outputfiles(outputfiles):
     for key in outputfiles:
@@ -216,14 +222,16 @@ if __name__ == '__main__':
     config    = parse_config(args['configfile'])
     inputdir  = config['dataprep']
     outputdir = config['outdir']
-
-    if not os.path.exists(outputdir):
-        os.makedirs(outputdir)
+    alldatapkl = config['alldatapkl']
+    rawdatspkl = config['rawdatspkl']
 
     ## input files
     srctokfile=os.path.join(inputdir, 'datstokenizer.pkl')
     tgttokfile=os.path.join(inputdir, 'comstokenizer.pkl')
-    alldatafile=os.path.join(inputdir, 'alldata.pkl')
+    alldatafile=os.path.join(inputdir, alldatapkl)
+    rawdatsfile=''
+    if rawdatspkl:
+        rawdatsfile=os.path.join(inputdir, rawdatspkl)
     
     ## output files
     outputfiles={
@@ -246,31 +254,36 @@ if __name__ == '__main__':
     tgttok = pickle.load(open(tgttokfile, 'rb'), encoding="UTF-8")
     index_word_tgt = tgttok.i2w
     
-    # if "\n" in index_word_src[208299]:
-    #     logger.info("word has \\n: " +  str(srctok.word_index["else\n"]))
-    # else:
-    #     logger.info("word: " +  str(srctok.word_index["else"]))
-
     alldata = pickle.load(open(alldatafile, 'rb'))
+    rawdats = dict()
+    if rawdatsfile:
+        rawdats = pickle.load(open(rawdatsfile, 'rb'))
     
     # generating vocab files
     logger.info("creating the vocab files...")
     vocabfiles(srctok, tgttok, outputfiles['srcvocabfile'], outputfiles['tgtvocabfile']) # , vocabsize_src, vocabsize_tgt
 
+    coms_train_seqs = alldata['coms_train_seqs']
+    coms_test_seqs  = alldata['coms_test_seqs']
+    if not rawdats:
+        rawdats = alldata['dats_raw']
+    
     # generating training data files
     logger.info("creating the training data files...")
-    getdata_from_alldata(alldata, 'dats_raw', 'coms_train_seqs', index_word_src, index_word_tgt, outputfiles['srctrainfile'], outputfiles['tgttrainfile'])
+    getdata_from_alldata(rawdats, coms_train_seqs, index_word_src, index_word_tgt,
+                         outputfiles['srctrainfile'], outputfiles['tgttrainfile'])
     check_two_files(outputfiles['srctrainfile'], outputfiles['tgttrainfile'])
-
+    	
     # generating valid data files
     # like the alpha version, for now, we use a subset from the training set as the valid set
     logger.info("creating the valid data files...")
-    validfiles(alldata, 'dats_raw', 'coms_train_seqs', index_word_src, index_word_tgt, outputfiles['srcvalidfile'], outputfiles['tgtvalidfile'])
+    validfiles(rawdats, coms_train_seqs, index_word_src, index_word_tgt,
+               outputfiles['srcvalidfile'], outputfiles['tgtvalidfile'])
     check_two_files(outputfiles['srcvalidfile'], outputfiles['tgtvalidfile'])
-
+    
     # generating test data files
     logger.info("creating the test data files...")
-    getdata_from_alldata(alldata, 'dats_raw', 'coms_test_seqs', index_word_src, index_word_tgt, outputfiles['srctestfile'], outputfiles['tgttestfile'])
+    getdata_from_alldata(rawdats, coms_test_seqs, index_word_src, index_word_tgt,
+                         outputfiles['srctestfile'], outputfiles['tgttestfile'])
     check_two_files(outputfiles['srctestfile'], outputfiles['tgttestfile'])
-
     logger.info("Finished.")

@@ -22,7 +22,7 @@ while getopts ":c:d:l:h" opt; do
 	config=$OPTARG
 	;;
     d )
-	dev=$OPTARG
+	dev=$((OPTARG+1)) # codenn (which uses lua torch) specify GPU device ids from 1
 	;;
     l )
 	log=$OPTARG
@@ -58,28 +58,13 @@ if ! $passarg ;then
 fi
 
 cwd=$(pwd)
+log=$cwd/$log
 
 echo "config file: $config, log file: $log" | tee -a $log
-exec {BASH_XTRACEFD}>>$cwd/$log
-set -x
+# exec {BASH_XTRACEFD}>>$log
+# set -x
 source download_codenn.sh
-
-if [[ $(hostname -s) = ash ]]; then
-    printf "ash: activate lua 5.2 ...\n"
-    if [ -f /scratch/software/torch/install/bin/torch-activate ]; then
-	. /scratch/software/torch/install/bin/torch-activate
-    else
-	echo "Cannot find torch in /scratch/software/torch/install/bin/torch-activate. Exit."
-	exit 1
-    fi
-else
-    if [ -f /scratch/software/torch/install/bin/torch-activate ]; then
-	. /scratch/software/torch/install/bin/torch-activate
-    else
-	echo "Cannot find torch in /scratch/software/torch/install/bin/torch-activate."
-	printf "\n***\n***make sure you are using lua 5.2\n***\n"    
-    fi
-fi
+source activate_lua.sh
 
 ###
 ### Parsing the config file
@@ -101,11 +86,13 @@ eval "$(cat $config  | python ./ini2arr.py)"
 checkconfig 'CODENN' 'workdir'
 checkconfig 'PREPDATA' 'outdir'
 checkconfig 'PREPDATA' 'dataprep'
+checkconfig 'PREPDATA' 'lang'
 checkconfig 'TRAIN' 'outdir'
 printf "\n" | tee -a $log
+lang=${PREPDATA[lang]} # language of the data set
 
 ###
-### PYTHON scripts: prepare the environment vairables
+### prepare the environment vairables
 ###
 export PYTHONPATH="${PYTHONPATH}:$cwd/codenn/src/"
 export CODENN_DIR="$cwd/codenn"
@@ -122,11 +109,11 @@ echo "PYTHONPATH: $PYTHONPATH, CODENN_DIR: ${CODENN_DIR}, CODENN_WORK: ${CODENN_
 ###
 ### prepare the data set
 ###
-echo "running codenn/src/cpp/createParser ... " | tee -a $log
-pushd ./codenn/src/cpp
-bash createParser.sh 2>&1 | tee -a $cwd/$log
+echo "language: $lang, running codenn/src/$lang/createParser ... " | tee -a $log
+pushd ./codenn/src/$lang
+bash createParser.sh 2>&1 | tee -a $log
 popd
-echo "codenn/src/cpp/createParser.sh done" | tee -a $log
+echo "codenn/src/$lang/createParser.sh done" | tee -a $log
 
 start=$(date +%s.%N)
 echo "running prepdata.py ... " | tee -a $log
@@ -157,7 +144,7 @@ echo "parseData.py done: $diff" | tee -a $log
 ### CODENN: buildData
 ###
 missingfile=false
-all=("$CODENN_WORK/test.data.cpp" "$CODENN_WORK/test.txt.cpp" "$CODENN_WORK/train.data.cpp" "$CODENN_WORK/train.txt.cpp" "$CODENN_WORK/valid.data.cpp" "$CODENN_WORK/valid.txt.cpp" "$CODENN_WORK/vocab.cpp" "$CODENN_WORK/vocab.data.cpp")
+all=("$CODENN_WORK/test.data.$lang" "$CODENN_WORK/test.txt.$lang" "$CODENN_WORK/train.data.$lang" "$CODENN_WORK/train.txt.$lang" "$CODENN_WORK/valid.data.$lang" "$CODENN_WORK/valid.txt.$lang" "$CODENN_WORK/vocab.$lang" "$CODENN_WORK/vocab.data.$lang")
 for i in "${all[@]}" ; do
     if [ ! -f $i ]; then
         missingfile=true
@@ -168,7 +155,7 @@ if $missingfile ;then
     start=$(date +%s.%N)
     echo "running codenn/src/model/buildData.sh ... " | tee -a $log
     pushd ./codenn/src/model
-    bash ./buildData.sh  2>&1 | tee -a $cwd/$log
+    bash ./buildData.sh  $lang 2>&1 | tee -a $log
     popd
     end=$(date +%s.%N)
     diff=`show_time $end $start`
@@ -192,7 +179,7 @@ else
     start=$(date +%s.%N)
     echo "running codenn/src/model/main.lua ... " | tee -a $log
     pushd ./codenn/src/model
-    th ./main.lua -gpuidx $dev -language cpp -outdir $cwd/$modelout -dev_ref_file $CODENN_WORK/valid.txt.cpp.ref
+    th ./main.lua -gpuidx $dev -language $lang -outdir $cwd/$modelout -dev_ref_file $CODENN_WORK/valid.txt.$lang.ref
     popd
     end=$(date +%s.%N)
     diff=`show_time $end $start`
