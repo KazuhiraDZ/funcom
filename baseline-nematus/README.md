@@ -6,6 +6,16 @@ Scripts for running [nematus-tensorflow](https://github.com/EdinburghNLP/nematus
 python3, python2, keras, tensorflow in python3 & python2\
 tested on Ubuntu 16 and Debian GNU/Linux 8.10 with **/scratch/funcom/data/D_001**
 
+### Default configuration and current results
+input vocab size: 50000 \
+target vocab size: 10449 \
+stopping criterion: the default stopping criterion Nematus use (early-stopping-method) \
+number of epochs: 63 \
+batch size: 80 \
+training time: 3d 6h 9m 21s \
+BLEU score: on the data set preprocessed by an obsolete filter \
+BLEU4: 44.60 (53.69, 44.89, 41.77, 39.32)
+
 ### Overview of this baseline
 <img src="workflow.png" width="400">
 
@@ -30,5 +40,5 @@ Extra notes:
 2) like the alpha version, **for now**, we use a subset from the training set as the valid set
 3) uses the same vocab size for tgt sequences as the alpha model: for tgt sequences, 10449
 4) different from the alpha model, for src sequences, we use 50k instead of all the words (too big for nematus..)
-5) **for testing**: gpu memory is often not large enough for testing the entire test set. Try something like:\
-```split -a 3 -d -l 300 data/test.src.txt data/test.src.split/test.src.part``` to split the test file into smaller pieces.
+5) **for testing**: gpu memory is often not large enough for testing the entire test set. In the script, we split the test file into smaller pieces. First, we split the file into small files of 3K lines. It turned out, for some small files, we still got "out of memory" errors. For those files, we split them into smaller files of 100 lines.
+
