@@ -15,7 +15,7 @@ function error(){ echo -e "${RED}Error: $1${NC}" | tee -a $log; }
 read -r -d '' helpmsg <<EOM
 Usage: $0
     -c          [required] set a config file
-    -d          [optional] set a gpu id to be used
+    -d          [required] set a gpu id to be used
     -l          [optional] set the file name for log; default file name: $log
     -h          display this help message
 EOM
@@ -49,6 +49,11 @@ shift $((OPTIND -1))
 
 if $passarg && [ -z "$config" ]; then
     echo "Must use -c to specify a config file to use."
+    passarg=false
+fi
+
+if $passarg && [ -z "$dev" ]; then
+    echo "Must use -d to specify a gpu to use."
     passarg=false
 fi
 
@@ -97,11 +102,7 @@ start=$(date +%s.%N)
 function runtest(){
     local testfile=$1
     infoecho "runtest: $testfile\n"
-    if [ -z "$dev" ]; then
-        bash test_nmt.sh "$modelfiles" $testfile ${testfile}.predict ${TEST[modeldir]}/model.npz.json 2>&1 | tee -a $log
-    else
-        CUDA_VISIBLE_DEVICES=$dev bash test_nmt.sh "$modelfiles" $testfile ${testfile}.predict ${TEST[modeldir]}/model.npz.json 2>&1 | tee -a $log
-    fi    
+    CUDA_VISIBLE_DEVICES=$dev bash test_nmt.sh "$modelfiles" $testfile ${testfile}.predict ${TEST[modeldir]}/model.npz.json 2>&1 | tee -a $log    
 }
 
 mkdir -p ${TEST[datadir]}/testsplitfiles
