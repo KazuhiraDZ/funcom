@@ -140,8 +140,11 @@ ls -v `find ${TEST[datadir]}/testsplitfiles/ -name "test.src.txt_[0-9][0-9][0-9]
     	    runtest "$smaller_filename"
     	    if [ -s ${smaller_filename}.predict ]
     	    then
-    		cat ${smaller_filename}.predict >> ${TEST[outdir]}/${TEST[predict]}
-    		cat ${smaller_filename} >> "${TEST[outdir]}/${TEST[predict]}".duplicate
+    		# cat ${smaller_filename}.predict >> ${TEST[outdir]}/${TEST[predict]}
+		rm -fr tmp
+		sed 's!<s>\s!!g' ${smaller_filename}.predict > tmp
+		sed 's!\s</s>\s*!!g' tmp >>  ${TEST[outdir]}/${TEST[predict]}
+    		cat ${smaller_filename} >> "${TEST[outdir]}/${TEST[predict]}".src
     	    else
     		error "Nematus still cannot generate predictions for $smaller_filename "
     		exit 1

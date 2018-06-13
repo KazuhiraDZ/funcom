@@ -146,7 +146,21 @@ def validfiles(alldata, field_src, field_tgt, index_word_src, index_word_tgt, sr
         for fid, line in zip(fidlist, tgtlist):
             outf.write(str(fid)+'\t'+line+'\n')
 
+    with open(tgtoutfile+'.ref', mode='wt', encoding='utf-8') as outf:
+        for line in tgtlist:
+            splitline=line.split(' ', 1)
+            firstword=splitline[0]
+            if firstword == '<s>':
+                line=splitline[1]
+                
+            splitline=line.rsplit(' ', 1)
+            lastword=splitline[1]
+            if lastword == '</s>':
+                line=splitline[0]
+            
+            outf.write(line+'\n')
 
+            
 def parse_args():
     parser = argparse.ArgumentParser(description='prepare data files for nematus to run.')
     parser.add_argument('--config', nargs=1, help='the config file, see nematus.ini as an example', required=True)
