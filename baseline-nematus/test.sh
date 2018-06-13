@@ -130,12 +130,15 @@ ls -v `find ${TEST[datadir]}/testsplitfiles/ -name "test.src.txt_[0-9][0-9][0-9]
     runtest "$filename";
     if [ -s ${filename}.predict ]
     then
-    	cat ${filename}.predict >> ${TEST[outdir]}/${TEST[predict]}
-    	cat $filename >> "${TEST[outdir]}/${TEST[predict]}".duplicate
+    	# cat ${filename}.predict >> ${TEST[outdir]}/${TEST[predict]}
+	rm -fr tmp
+	sed 's!<s>\s!!g' ${filename}.predict > tmp
+	sed 's!\s</s>\s*!!g' tmp >>  ${TEST[outdir]}/${TEST[predict]}
+    	cat $filename >> "${TEST[outdir]}/${TEST[predict]}".src
     else
     	warning "Nematus did not generate prediciton file for $filename. Try splitting it again."
 	rm -f ${filename}_*
-    	split -a 4 -d -l 100 $filename ${filename}_
+    	split -a 4 -d -l 50 $filename ${filename}_
     	for smaller_filename in ${filename}_*; do
     	    runtest "$smaller_filename"
     	    if [ -s ${smaller_filename}.predict ]
