@@ -8,7 +8,7 @@ RED='\033[0;31m'
 YELLOW='\033[0;33m'
 NC='\033[0m'
 
-function infoecho(){ printf $1 | tee -a $log; }
+function infoecho(){ printf "$1" | tee -a $log; }
 function warning(){ echo -e "${YELLOW}Warning: $1${NC}" | tee -a $log; }
 function error(){ echo -e "${RED}Error: $1${NC}" | tee -a $log; }
 
