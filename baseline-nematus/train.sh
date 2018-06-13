@@ -7,7 +7,7 @@ log=train.log.$today
 read -r -d '' helpmsg <<EOM
 Usage: $0
     -c          [required] set a config file
-    -d          [optional] set a gpu id to be used
+    -d          [required] set a gpu id to be used
     -l          [optional] set the file name for log; default file name: $log
     -h          display this help message
 EOM
@@ -41,6 +41,11 @@ shift $((OPTIND -1))
 
 if $passarg && [ -z "$config" ]; then
     echo "Must use -c to specify a config file to use."
+    passarg=false
+fi
+
+if $passarg && [ -z "$dev" ]; then
+    echo "Must use -d to specify a gpu to use."
     passarg=false
 fi
 
@@ -98,11 +103,7 @@ checkconfig 'vocabsize_src'
 checkconfig 'vocabsize_tgt'
 printf "\n" | tee -a $log
 start=$(date +%s.%N)
-if [ -z "$dev" ]; then
-    bash train_nmt.sh ${TRAIN[outdir]} ${TRAIN[data]} ${TRAIN[vocabsize_src]} ${TRAIN[vocabsize_tgt]} 2>&1 | tee -a $log
-else
-    CUDA_VISIBLE_DEVICES=$dev bash train_nmt.sh ${TRAIN[outdir]} ${TRAIN[data]} ${TRAIN[vocabsize_src]} ${TRAIN[vocabsize_tgt]} 2>&1 | tee -a $log
-fi
+CUDA_VISIBLE_DEVICES=$dev bash train_nmt.sh ${TRAIN[outdir]} ${TRAIN[data]} ${TRAIN[vocabsize_src]} ${TRAIN[vocabsize_tgt]} 2>&1 | tee -a $log
 
 end=$(date +%s.%N)
 diff=`show_time $end $start`
