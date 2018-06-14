@@ -105,6 +105,21 @@ def getdata_from_alldata(alldata, field_src, field_tgt, index_word_src, index_wo
         for fid, line in zip(fidlist, tgtlist):
             outf.write(str(fid)+'\t'+line+'\n')
 
+    with open(tgtoutfile+'.ref', mode='wt', encoding='utf-8') as outf:
+        for line in tgtlist:
+            line = line.strip()
+            splitline=line.split(' ', 1)
+            firstword=splitline[0]
+            if firstword == '<s>':
+                line=splitline[1]
+                
+            splitline=line.rsplit(' ', 1)
+            lastword=splitline[1]
+            if lastword == '</s>':
+                line=splitline[0]
+            
+            outf.write(line+'\n')
+
 
 def validfiles(alldata, field_src, field_tgt, index_word_src, index_word_tgt, srcoutfile, tgtoutfile):
     srclist = list()
@@ -148,6 +163,7 @@ def validfiles(alldata, field_src, field_tgt, index_word_src, index_word_tgt, sr
 
     with open(tgtoutfile+'.ref', mode='wt', encoding='utf-8') as outf:
         for line in tgtlist:
+            line = line.strip()
             splitline=line.split(' ', 1)
             firstword=splitline[0]
             if firstword == '<s>':
