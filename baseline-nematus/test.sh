@@ -139,7 +139,7 @@ ls -v `find ${TEST[datadir]}/testsplitfiles/ -name "test.src.txt_[0-9][0-9][0-9]
     	warning "Nematus did not generate prediciton file for $filename. Try splitting it again."
 	rm -f ${filename}_*
     	split -a 4 -d -l 50 $filename ${filename}_
-    	for smaller_filename in ${filename}_*; do
+    	ls -v ${filename}_* | while read smaller_filename; do
     	    runtest "$smaller_filename"
     	    if [ -s ${smaller_filename}.predict ]
     	    then
@@ -153,6 +153,7 @@ ls -v `find ${TEST[datadir]}/testsplitfiles/ -name "test.src.txt_[0-9][0-9][0-9]
     		exit 1
     	    fi
     	done
+	[[ $? != 0 ]] && exit $?
     fi
 done
 
