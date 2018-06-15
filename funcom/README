@@ -1,0 +1,62 @@
+Description:    Infrastructure for developing and testing models.
+
+Author:         Collin McMillan <cmc@nd.edu>
+Last Update:    6/14/18
+
+*** model.py ***
+
+This file contains the create_model() function.  One would not run this script by itself; it is a dependency of both predict.py and train.py.
+
+This script loads models based on a name for the models.  The actual model implementations are in the models directory, and should be self-explanatory.
+
+*** train.py ***
+
+This file reads seqdata.pkl, comstokenizer.pkl, and datstokenizer.pkl (and Tokenizer.py) from the given dataprep folder, and formats them for training.  It also uses model.py to create the model, and trains the model.  The script writes (overwritting if necessary) a file mdl-current-[modelname].h5 every 50 batches.  At the end, it writes mdl-final.h5.
+
+Usage: python3 train.py
+
+Options are:
+
+--gpu=[str]
+--batch-size=[int]
+--epochs=[int]
+--model-type=[str]
+--with-multigpu
+--data-prep=[str]
+--outdir=[str]
+
+For example:
+
+python3 train.py --gpu=1 --batch-size=300 --epochs=10 --model-type=vanilla-lstm
+
+If outdir is changed for this script, you will need to change it for all other scripts.
+
+The multigpu setup may or may not be stable.  To try it, be sure to give it access to both GPUs:
+
+python3 train.py --gpu=0,1 --batch-size=300 --epochs=10 --model-type=vanilla-lstm --with-multigpu
+
+*** predict.py ***
+
+This file reads seqdata.pkl, comstokenizer.pkl, and datstokenizer.pkl, and formats them for testing.  It creates a model using model.py, loads weights from a provided h5 file (usually mdl-current.h5).  Predictions are outputted to a file predict-[modelname].txt for every function ID in the test set.
+
+Usage: python3 predict.py [options]
+
+Options are:
+
+--num-procs=[int]
+--gpu=[str]
+--model-type=[str]
+
+python3 predict.py --model-type=vanilla-lstm --num-procs=4
+
+Typical behavior is to use the CPU with multiple processes.  However, it may be necessary to use the GPU for some models e.g. due to the use of CuDNNGRU.  Using multiple processes with the GPU is still buggy, so right now it overrides any setting of num-procs if gpu has been set.
+
+*** bleu.py ***
+
+This file reads a reference.txt and predict-[modelname].txt and computes BLEU scores.
+
+python3 bleu.py --model-type=vanilla-lstm
+
+*** myutils.py ***
+
+Contains utility functions such as prep/drop (for progress reporting/timing), and batch generation for training and testing.
