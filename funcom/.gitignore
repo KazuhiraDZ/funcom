@@ -5,5 +5,7 @@ __pycache__/
 *.h5
 *.hdf5
 
+*.pkl
+
 outdir/
 
