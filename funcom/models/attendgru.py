@@ -10,11 +10,12 @@ import tensorflow as tf
 # https://arxiv.org/abs/1508.04025
 
 class AttentionGRUModel:
-    def __init__(self, datvocabsize, comvocabsize, datlen, comlen, multigpu=False):
-        self.datvocabsize = datvocabsize
-        self.comvocabsize = comvocabsize
-        self.datlen = datlen
-        self.comlen = comlen
+    def __init__(self, config):
+        self.datvocabsize = config['datvocabsize']
+        self.comvocabsize = config['comvocabsize']
+        self.datlen = config['datlen']
+        self.comlen = config['comlen']
+        self.multigpu = config['multigpu']
         
         self.embdims = 100
         self.recdims = 256

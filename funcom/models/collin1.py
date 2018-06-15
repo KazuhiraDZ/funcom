@@ -6,16 +6,16 @@ import keras.utils
 import tensorflow as tf
 
 class Collin1Model:
-    def __init__(self, datvocabsize, comvocabsize, datlen, comlen, multigpu=False):
-        self.datvocabsize = datvocabsize
-        self.comvocabsize = comvocabsize
-        self.datlen = datlen
-        self.comlen = comlen
+    def __init__(self, config):
+        self.datvocabsize = config['datvocabsize']
+        self.comvocabsize = config['comvocabsize']
+        self.datlen = config['datlen']
+        self.comlen = config['comlen']
+        self.multigpu = config['multigpu']
+        self.batch_size = config['batch_size']
         
         self.embdims = 100
         self.recdims = 256
-        
-        self.multigpu = multigpu
     
     def create_model(self):
         
@@ -25,7 +25,7 @@ class Collin1Model:
         ee = Embedding(output_dim=self.embdims, input_dim=self.datvocabsize, mask_zero=False)(dat_input)
         
         #enc = GRU(self.recdims, return_state=True, return_sequences=True, activation='tanh', unroll=True)
-        enc = SimpleRNN(self.recdims, return_state=True, return_sequences=True, unroll=True, stateful=True)
+        enc = SimpleRNN(self.recdims, return_state=True, return_sequences=True, unroll=True)
         encout, state_h = enc(ee)
         
         de = Embedding(output_dim=self.embdims, input_dim=self.comvocabsize, mask_zero=False)(com_input)

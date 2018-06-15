@@ -10,18 +10,18 @@ from models.bidirgru import BidirGRUModel
 from models.attendgru import AttentionGRUModel
 from models.collin1 import Collin1Model
 
-def create_model(modeltype, datvocabsize, comvocabsize, datlen=100, comlen=13, multigpu=False):
+def create_model(modeltype, config):
     mdl = None
 
     if modeltype == 'vanilla-lstm':
-        mdl = VanillaLSTMModel(datvocabsize, comvocabsize, datlen, comlen)
+        mdl = VanillaLSTMModel(config)
     elif modeltype == 'vanilla-gru':
-        mdl = VanillaGRUModel(datvocabsize, comvocabsize, datlen, comlen)
+        mdl = VanillaGRUModel(config)
     elif modeltype == 'bidir-gru':
-        mdl = BidirGRUModel(datvocabsize, comvocabsize, datlen, comlen)
+        mdl = BidirGRUModel(config)
     elif modeltype == 'attend-gru':
-        mdl = AttentionGRUModel(datvocabsize, comvocabsize, datlen, comlen, multigpu)
+        mdl = AttentionGRUModel(config)
     elif modeltype == 'collin-1':
-        mdl = Collin1Model(datvocabsize, comvocabsize, datlen, comlen, multigpu)
+        mdl = Collin1Model(config)
 
     return mdl.create_model()

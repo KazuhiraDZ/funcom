@@ -5,11 +5,12 @@ import keras
 import tensorflow as tf
 
 class VanillaGRUModel:
-    def __init__(self, datvocabsize, comvocabsize, datlen, comlen):
-        self.datvocabsize = datvocabsize
-        self.comvocabsize = comvocabsize
-        self.datlen = datlen
-        self.comlen = comlen
+    def __init__(self, config):
+        self.datvocabsize = config['datvocabsize']
+        self.comvocabsize = config['comvocabsize']
+        self.datlen = config['datlen']
+        self.comlen = config['comlen']
+        self.multigpu = config['multigpu']
 
     def create_model(self):
         dat_input = Input(shape=(self.datlen,))

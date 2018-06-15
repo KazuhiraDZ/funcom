@@ -45,7 +45,7 @@ if __name__ == '__main__':
     parser.add_argument('--epochs', dest='epochs', type=int, default=100)
     parser.add_argument('--model-type', dest='modeltype', type=str, default='vanilla')
     parser.add_argument('--with-multigpu', dest='multigpu', action='store_true', default=False)
-    parser.add_argument('--data-prep', dest='dataprep', type=str, default='/scratch/funcom_bak/data/D_004')
+    parser.add_argument('--data-prep', dest='dataprep', type=str, default='../data/old')
     parser.add_argument('--outdir', dest='outdir', type=str, default='outdir')
     args = parser.parse_args()
     
@@ -56,8 +56,6 @@ if __name__ == '__main__':
     epochs = args.epochs
     modeltype = args.modeltype
     multigpu = args.multigpu
-    
-    print('dataprep', dataprep)
 
     sys.path.append(dataprep)
     import Tokenizer
@@ -81,8 +79,19 @@ if __name__ == '__main__':
     print('datvocabsize %s' % (datvocabsize))
     print('comvocabsize %s' % (comvocabsize))
 
+    # config is a dictionary so that we can send whatever info we need when creating a model
+    # without having to go back and change every other model that doesn't need it
+    # (e.g., batch_size for models using stateful SimpleRNN)
+    config = dict()
+    config['datvocabsize'] = datvocabsize
+    config['comvocabsize'] = comvocabsize
+    config['datlen'] = len(list(seqdata['dats_train_seqs'].values())[0])
+    config['comlen'] = len(list(seqdata['coms_train_seqs'].values())[0])
+    config['multigpu'] = multigpu
+    config['batch_size'] = batch_size
+
     prep('creating model... ')
-    model = create_model(modeltype, datvocabsize, comvocabsize, multigpu=multigpu)
+    model = create_model(modeltype, config)
     drop()
 
     print(model.summary())

@@ -39,27 +39,19 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='')
     parser.add_argument('--model-type', dest='modeltype', type=str, default='vanilla-lstm')
+    parser.add_argument('--data-prep', dest='dataprep', type=str, default='../data/old')
+    parser.add_argument('--outdir', dest='outdir', type=str, default='outdir')
     args = parser.parse_args()
-
-    outdir = 'outdir'
-    dataprep = '/scratch/funcom/data/D_004'
+    
+    outdir = args.outdir
+    dataprep = args.dataprep
     modeltype = args.modeltype
 
     sys.path.append(dataprep)
     import Tokenizer
 
-    #prep('loading tokenizers... ')
-    #datstok = pickle.load(open('%s/datstokenizer.pkl' % (dataprep), 'rb'), encoding='UTF-8')
-    #comstok = pickle.load(open('%s/comstokenizer.pkl' % (dataprep), 'rb'), encoding='UTF-8')
-    #drop()
-
-    #prep('loading sequences... ')
-    #seqdata = pickle.load(open('%s/seqdata.pkl' % (dataprep), 'rb'))
-    #drop()
-
     prep('preparing predictions list... ')
     preds = dict()
-    #fids = list()
     predicts = open('%s/predict-%s.txt' % (outdir, modeltype), 'r')
     for c, line in enumerate(predicts):
         (fid, pred) = line.split('\t')
@@ -69,13 +61,9 @@ if __name__ == '__main__':
         if(len(pred) == 0):
             continue
         preds[fid] = pred
-        #fids.append(int(fid))
-        #if(c > 0 and c % 10 == 0):
-        #    break
     predicts.close()
     drop()
 
-    #prep('preparing references list (%s functions)... ' % (len(fids)))
     refs = list()
     newpreds = list()
     d = 0
@@ -83,9 +71,6 @@ if __name__ == '__main__':
     for line in targets:
         (fid, com) = line.split('\t')
         fid = int(fid)
-    #for c, fid in enumerate(fids):
-        #com = seqdata['coms_test_seqs'][fid]
-        #com = seq2sent(com, comstok)
         com = com.replace('fonts', 'UNK')
         com = com.split()
         com = fil(com)
@@ -111,12 +96,7 @@ if __name__ == '__main__':
                 print('%s' % refs[i])
                 print()
             print()
-            
-            #statusout('%s, ' % (c))
-    #drop()
 
     print('final status')
     print(bleu_so_far(refs, newpreds))
 
-    #B1 = sentence_bleu(refs, preds[0], weights=(1,0,0,0))
-    #print('B1 %s' % (B1))

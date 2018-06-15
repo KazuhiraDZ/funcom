@@ -43,7 +43,18 @@ def gendescrs(wrkunits):
     
     import keras
     from keras.models import load_model
-    
+
+    # this is here, rather than in main(), because each process 
+    # needs its own instance of the model for keras to work
+
+    config = dict()
+    config['datvocabsize'] = datvocabsize
+    config['comvocabsize'] = comvocabsize
+    config['datlen'] = len(wrkunits[0][1]) # length of the data
+    config['comlen'] = wrkunits[0][2] # comlen sent us in workunits
+    config['multigpu'] = multigpu
+    config['batch_size'] = batch_size
+
     model = create_model(modeltype, datvocabsize, comvocabsize)
     model.load_weights('%s/mdl-current-%s.h5' % (outdir, modeltype))
     
@@ -61,10 +72,12 @@ if __name__ == '__main__':
     parser.add_argument('--model-type', dest='modeltype', type=str, default='vanilla-lstm')
     parser.add_argument('--num-procs', dest='numprocs', type=int, default='4')
     parser.add_argument('--gpu', dest='gpu', type=str, default='')
+    parser.add_argument('--data-prep', dest='dataprep', type=str, default='../data/old')
+    parser.add_argument('--outdir', dest='outdir', type=str, default='outdir')
     args = parser.parse_args()
-
-    outdir = 'outdir'
-    dataprep = '/scratch/funcom/data/D_004'
+    
+    outdir = args.outdir
+    dataprep = args.dataprep
     global modeltype
     modeltype= args.modeltype
     numprocs = args.numprocs
