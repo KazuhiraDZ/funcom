@@ -27,6 +27,7 @@ def bleu_so_far(refs, preds):
     B4 = round(B4 * 100, 2)
 
     ret = ''
+    ret += ('for %s functions\n' % (len(preds)))
     ret += ('Ba %s\n' % (Ba))
     ret += ('B1 %s\n' % (B1))
     ret += ('B2 %s\n' % (B2))
@@ -64,6 +65,14 @@ if __name__ == '__main__':
     predicts.close()
     drop()
 
+    #remfids = pickle.load(open('%s/remfids.pkl' % (outdir), 'rb'))
+    remfids = list()
+
+    remfidsf = open('%s/remfids.txt' % (outdir), 'r')
+
+    for line in remfidsf:
+        remfids.append(int(line))
+
     refs = list()
     newpreds = list()
     d = 0
@@ -71,14 +80,23 @@ if __name__ == '__main__':
     for line in targets:
         (fid, com) = line.split('\t')
         fid = int(fid)
+
+        if not (fid in remfids):
+            continue
+
         com = com.replace('fonts', 'UNK')
         com = com.split()
         com = fil(com)
 
-        if com[0] in ['see', 'non', 'begin', 'get', 'gets', 'set', 'sets']:
-            continue
+        #com = com[1:] # remove first word
+
+        #if com[0] in ['see', 'non', 'begin', 'get', 'gets', 'set', 'sets']:
+        #    continue
         
         try:
+            #if com == preds[fid]:
+            #    continue
+            #preds[fid] = preds[fid][1:] # remove first word
             newpreds.append(preds[fid])
         except KeyError as ex:
             continue
