@@ -97,9 +97,10 @@ checkconfig 'outdir'
 checkconfig 'data'
 checkconfig 'vocabsize_src'
 checkconfig 'vocabsize_tgt'
+checkconfig 'maxlen'
 infoecho "\n"
 start=$(date +%s.%N)
-CUDA_VISIBLE_DEVICES=$dev bash train_nmt.sh ${TRAIN[outdir]} ${TRAIN[data]} ${TRAIN[vocabsize_src]} ${TRAIN[vocabsize_tgt]} 2>&1 | tee -a $log
+CUDA_VISIBLE_DEVICES=$dev bash train_nmt.sh ${TRAIN[outdir]} ${TRAIN[data]} ${TRAIN[vocabsize_src]} ${TRAIN[vocabsize_tgt]} $maxlen 2>&1 | tee -a $log
 
 end=$(date +%s.%N)
 diff=`show_time $end $start`

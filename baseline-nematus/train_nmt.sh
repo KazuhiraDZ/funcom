@@ -13,7 +13,7 @@ function checkfiles ()
     done
 }
 
-if [ "$#" -ne 4 ] && [ "$#" -ne 5 ]; then
+if [ "$#" -ne 5 ] && [ "$#" -ne 6 ]; then
     echo "train.sh: Illegal number of parameters"
     echo "train.sh: Usage: $0 output_directory_for_models data_directory_for_training vocab_size_for_source vocab_size_for_target [optional valid freq: default 10k]"
     exit 0
@@ -28,7 +28,8 @@ modelout=$1
 datadir=$2
 vocabsize_src=$3
 vocabsize_tgt=$4
-validfreq=${5:-10000} # 10000
+maxlen=$5
+validfreq=${6:-10000} # 10000
 
 if test "$(ls -A "$modelout")"; then
     echo "train.sh: the output directory for model files is not empty."
@@ -61,7 +62,7 @@ python2.7 $nematus \
 	  --clip_c 1 \
 	  --lrate 0.0001 \
 	  --optimizer adam \
-	  --maxlen 50 \
+	  --maxlen $maxlen \
 	  --batch_size 80 \
 	  --valid_batch_size 80 \
 	  --datasets $trainsrc $traintgt \
