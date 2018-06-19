@@ -14,8 +14,8 @@ function checkfiles ()
 }
 
 if [ "$#" -ne 5 ] && [ "$#" -ne 6 ]; then
-    echo "train.sh: Illegal number of parameters"
-    echo "train.sh: Usage: $0 output_directory_for_models data_directory_for_training vocab_size_for_source vocab_size_for_target [optional valid freq: default 10k]"
+    echo "$0: Illegal number of parameters: $#"
+    echo "$0: Usage: $0 output_directory_for_models data_directory_for_training vocab_size_for_source vocab_size_for_target maxlen [optional valid freq: default 10k]"
     exit 0
 fi
 

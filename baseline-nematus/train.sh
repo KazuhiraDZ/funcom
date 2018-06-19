@@ -88,7 +88,7 @@ function checkconfig()
         echo "$0: cannot get config variable: $var for train_nmt.sh. Exit."
         exit 1
     fi
-    printf "$var: ${TRAIN[$var]}, " | tee -a $log
+    infoecho "$var: ${TRAIN[$var]}, "
 }
 
 eval "$(cat $config  | python ./ini2arr.py)"
@@ -100,7 +100,7 @@ checkconfig 'vocabsize_tgt'
 checkconfig 'maxlen'
 infoecho "\n"
 start=$(date +%s.%N)
-CUDA_VISIBLE_DEVICES=$dev bash train_nmt.sh ${TRAIN[outdir]} ${TRAIN[data]} ${TRAIN[vocabsize_src]} ${TRAIN[vocabsize_tgt]} $maxlen 2>&1 | tee -a $log
+CUDA_VISIBLE_DEVICES=$dev bash train_nmt.sh ${TRAIN[outdir]} ${TRAIN[data]} ${TRAIN[vocabsize_src]} ${TRAIN[vocabsize_tgt]} ${TRAIN[maxlen]} 2>&1 | tee -a $log
 
 end=$(date +%s.%N)
 diff=`show_time $end $start`

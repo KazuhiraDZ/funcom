@@ -162,8 +162,10 @@ ls -v `find ${TEST[datadir]}/testsplitfiles/ -name "test.src.txt_[0-9][0-9][0-9]
     		cat ${smaller_filename} >> "${TEST[outdir]}/${TEST[predict]}".src
 		cat ${smaller_filename}.predict >> ${filename}.predict.tmp
     	    else
+		rm -fr ${smaller_filename}.predict.tmp
+		
 		warning "Nematus did not generate prediciton file for ${smaller_filename}. The final try: splitting it into one-line file."
-		split -a 5 -d -l 1 ${smaller_filename} ${smaller_filename}_*
+		split -a 5 -d -l 1 ${smaller_filename} ${smaller_filename}_
 		tmpsmaller_filename="`basename ${smaller_filename}`"
 		ls -v `find ${TEST[datadir]}/testsplitfiles/ -name "${tmpsmaller_filename}_[0-9][0-9][0-9][0-9][0-9]"` | while read smallest_filename; do
 		    warning "running nematus on ${smallest_filename} ... \n"
