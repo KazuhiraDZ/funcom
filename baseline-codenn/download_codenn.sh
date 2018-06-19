@@ -38,3 +38,8 @@ if ! $submoduleflag ;then
     downloadcodenn
 fi
 
+if [ ! -f antlr-4.5.3-complete.jar ]; then
+    echo "downloading antlr jar ..."
+    curl -O http://www.antlr.org/download/antlr-4.5.3-complete.jar
+    export CLASSPATH=.:./antlr-4.5.3-complete.jar:$CLASSPATH
+fi
