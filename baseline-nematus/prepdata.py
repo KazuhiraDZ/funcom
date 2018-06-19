@@ -40,7 +40,7 @@ def vocabfile( trainset, outfile ):
     out.close()
 
 
-def createfile(dataset1, outfile1, dataset2, outfile2, maxlen_tgt):
+def createfile(dataset1, outfile1, dataset2, outfile2, maxlen_src, maxlen_tgt):
     logger.info("write to " + outfile1 + " and " + outfile2)
     
     with open(outfile1, mode='wt', encoding='utf-8') as outf1, open(outfile1+'.id', mode='wt', encoding='utf-8') as outfid1, open(outfile2, mode='wt', encoding='utf-8') as outf2, open(outfile2+'.id', mode='wt', encoding='utf-8') as outfid2:
@@ -50,6 +50,8 @@ def createfile(dataset1, outfile1, dataset2, outfile2, maxlen_tgt):
                              + "\n fid1: " + str(fid1) + " fid2: " + str(fid2) + " are on the same line number.")
                 sys.exit(1)
                 
+            line1words = line1.split()[:maxlen_src]
+            line1 = ' '.join(line1words)    
             if line1 != '': # assume dataset1 is the source file
                 outf1.write(line1+'\n')
                 outfid1.write(str(fid1)+'\t'+line1+'\n')
@@ -105,6 +107,7 @@ def parse_config(configfile):
     dattest  = parse_config_var(config, 'dattest')
     datval   = parse_config_var(config, 'datval')
     maxlen_tgt = int(parse_config_var(config, 'maxlen_tgt'))
+    maxlen_src = int(parse_config_var(config, 'maxlen_src'))
     
     if not os.path.exists(outdir):
         os.makedirs(outdir)
@@ -117,7 +120,8 @@ def parse_config(configfile):
             'srctrain': dattrain,
             'srctest' : dattest,
             'srcval'  : datval,
-            'maxlen_tgt' : maxlen_tgt}
+            'maxlen_tgt' : maxlen_tgt,
+            'maxlen_src' : maxlen_src,}
 
 def check_outputfiles(outputfiles):
     for key in outputfiles:
@@ -173,6 +177,7 @@ if __name__ == '__main__':
     inputdir  = config['dataprep']
     outputdir = config['outdir']
     maxlen_tgt = config['maxlen_tgt']
+    maxlen_src = config['maxlen_src']
 
     ## input files
     inputfiles={
@@ -215,16 +220,16 @@ if __name__ == '__main__':
 
     # generating training data files
     logger.info("creating the training data files...")
-    createfile(datasets['srctrain'], outputfiles['srctrainfile'], datasets['tgttrain'], outputfiles['tgttrainfile'], maxlen_tgt)
+    createfile(datasets['srctrain'], outputfiles['srctrainfile'], datasets['tgttrain'], outputfiles['tgttrainfile'], maxlen_src, maxlen_tgt)
 
     # generating valid data files
     # like the alpha version, for now, we use a subset from the training set as the valid set
     logger.info("creating the valid data files...")
-    createfile(datasets['srcval'], outputfiles['srcvalidfile'], datasets['tgtval'], outputfiles['tgtvalidfile'], maxlen_tgt)
+    createfile(datasets['srcval'], outputfiles['srcvalidfile'], datasets['tgtval'], outputfiles['tgtvalidfile'], maxlen_src, maxlen_tgt)
 
     # generating test data files
     logger.info("creating the test data files...")
-    createfile(datasets['srctest'], outputfiles['srctestfile'], datasets['tgttest'], outputfiles['tgttestfile'], maxlen_tgt)
+    createfile(datasets['srctest'], outputfiles['srctestfile'], datasets['tgttest'], outputfiles['tgttestfile'], maxlen_src, maxlen_tgt)
 
     sanity_check(outputfiles)
     logger.info("Finished.")
