@@ -90,6 +90,7 @@ checkconfig 'modeldir'
 checkconfig 'datadir'
 checkconfig 'predict'
 checkconfig 'modelnum'
+checkconfig 'beamwidth'
 infoecho "\n"
 modelfiles=`python3 getmodels.py ${TEST[modeldir]} ${TEST[modelnum]}`
 if [ -z "$modelfiles" ]; then
@@ -103,7 +104,7 @@ start=$(date +%s.%N)
 function runtest(){
     local testfile=$1
     infoecho "runtest: $testfile, GPU device: $dev\n"
-    CUDA_VISIBLE_DEVICES=$dev bash test_nmt.sh "$modelfiles" $testfile ${testfile}.predict ${TEST[modeldir]}/model.npz.json 2>&1 | tee -a $log    
+    CUDA_VISIBLE_DEVICES=$dev bash test_nmt.sh "$modelfiles" $testfile ${testfile}.predict ${TEST[modeldir]}/model.npz.json ${TEST[beamwidth]} 2>&1 | tee -a $log    
 }
 
 mkdir -p ${TEST[datadir]}/testsplitfiles

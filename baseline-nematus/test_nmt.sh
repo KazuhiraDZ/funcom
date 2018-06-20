@@ -5,8 +5,8 @@
 
 nematus=./nematus-tensorflow/nematus
 
-if [ "$#" -ne 4 ]; then
-    echo "usage: model testfile testoutput npz.json_file"
+if [ "$#" -ne 5 ] && [ "$#" -ne 6 ]; then
+    echo "$0 usage: $0 model testfile testoutput npz.json_file beamwidth [optional: other args for nematus]"
     exit 1
 fi
 
@@ -14,6 +14,8 @@ MODEL=$1 #./models/model.100k.npz.npz.best_bleu
 TEST=$2  #./data/test.1k.diff
 OUT=$3   #./data/test.1k.diff.output
 JSONORIG=$4
+BEAMWIDTH=$5
+otheroptions=$6
 
 printf "model=\"%s\", test=%s, out=%s, jsonorig=%s\n" "$MODEL" "$TEST" "$OUT" "$JSONORIG"
 
@@ -31,5 +33,5 @@ python2.7 $nematus/translate.py \
 	    -m $MODEL \
 	    -i $TEST \
 	    -o $OUT \
-	    -k 12 -n -p 1
+	    -k $BEAMWIDTH $otheroptions -p 1
 
