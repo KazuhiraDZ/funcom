@@ -4,6 +4,14 @@ source time.sh
 today=`date +%Y-%m-%d.%H%M%S`
 log=train.log.$today
 
+RED='\033[0;31m'
+YELLOW='\033[0;33m'
+NC='\033[0m'
+
+function infoecho(){ printf "$1" | tee -a $log; }
+function warning(){ echo -e "${YELLOW}Warning: $1${NC}" | tee -a $log; }
+function error(){ echo -e "${RED}Error: $1${NC}" | tee -a $log; }
+
 read -r -d '' helpmsg <<EOM
 Usage: $0
     -c          [required] set a config file
@@ -54,21 +62,9 @@ if ! $passarg ;then
     exit 0
 fi
 
-echo "config file: $config, log file: $log" | tee -a $log
-exec {BASH_XTRACEFD}>>$log
-set -x
-
-if [[ $(hostname -s) = ash ]]; then
-    printf "ash: source sourceme.sh ...\n"
-    if [ -f /scratch/funcom/sourceme.sh ]; then
-	source /scratch/funcom/sourceme.sh
-    else
-	echo "Cannot find /scratch/funcom/sourceme.sh. Exit."
-	exit 1
-    fi
-else
-    printf "\n***\n***make sure you source sourcme.sh from Alex\n***\n"
-fi
+infoecho "config file: $config, log file: $log\n"
+# exec {BASH_XTRACEFD}>>$log
+# set -x
 
 source download_nematus.sh
 
@@ -76,11 +72,11 @@ source download_nematus.sh
 ### prepare the data set
 ###
 start=$(date +%s.%N)
-echo "running prepdata.py ... " | tee -a $log
+infoecho "running prepdata.py ... \n"
 python3 prepdata.py --config $config 2>&1 | tee -a $log
 end=$(date +%s.%N)
 diff=`show_time $end $start`
-echo "prepdata: $diff" | tee -a $log
+infoecho "prepdata: $diff \n"
 
 ###
 ### train nematus
@@ -92,21 +88,22 @@ function checkconfig()
         echo "$0: cannot get config variable: $var for train_nmt.sh. Exit."
         exit 1
     fi
-    printf "$var: ${TRAIN[$var]}, " | tee -a $log
+    infoecho "$var: ${TRAIN[$var]}, "
 }
 
 eval "$(cat $config  | python ./ini2arr.py)"
-printf "train_nmt.sh: " | tee -a $log
+infoecho "train_nmt.sh: "
 checkconfig 'outdir'
 checkconfig 'data'
 checkconfig 'vocabsize_src'
 checkconfig 'vocabsize_tgt'
-printf "\n" | tee -a $log
+checkconfig 'maxlen'
+infoecho "\n"
 start=$(date +%s.%N)
-CUDA_VISIBLE_DEVICES=$dev bash train_nmt.sh ${TRAIN[outdir]} ${TRAIN[data]} ${TRAIN[vocabsize_src]} ${TRAIN[vocabsize_tgt]} 2>&1 | tee -a $log
+CUDA_VISIBLE_DEVICES=$dev bash train_nmt.sh ${TRAIN[outdir]} ${TRAIN[data]} ${TRAIN[vocabsize_src]} ${TRAIN[vocabsize_tgt]} ${TRAIN[maxlen]} 2>&1 | tee -a $log
 
 end=$(date +%s.%N)
 diff=`show_time $end $start`
-echo "train: $diff" | tee -a $log
+infoecho "train: $diff\n"
 
 exit 0
