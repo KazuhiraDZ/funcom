@@ -68,6 +68,15 @@ fi
 cwd=$(pwd)
 log=$cwd/$log
 
+function absolutepath(){
+    local inpath=$1
+    if [[ "$inpath" = /* ]]; then
+        echo "$inpath"
+    else
+        echo "$cwd/$inpath"
+    fi
+}
+
 infoecho "config file: $config, log file: $log \n"
 # exec {BASH_XTRACEFD}>>$log
 # set -x
@@ -112,19 +121,9 @@ batch_size=${PREPDATA[batch_size]}
 export PYTHONPATH="${PYTHONPATH}:$cwd/codenn/src/"
 export CODENN_DIR="$cwd/codenn"
 
-<<<<<<< HEAD
 workdir=$(absolutepath ${CODENN[workdir]})
 export CODENN_WORK=$workdir
 
-=======
-workdir=${CODENN[workdir]}
-if [[ "$workdir" = /* ]]; then
-    export CODENN_WORK=$workdir
-else
-    # if the workdir is a relative path, change it to the absolute path
-    export CODENN_WORK=$cwd/$workdir
-fi
->>>>>>> updated all the scripts to support a new type of input data file
 infoecho "PYTHONPATH: $PYTHONPATH, CODENN_DIR: ${CODENN_DIR}, CODENN_WORK: ${CODENN_WORK}\n"
 
 ###
@@ -197,9 +196,13 @@ else
     start=$(date +%s.%N)
     infoecho "running codenn/src/model/main.lua ... \n"
 <<<<<<< HEAD
+<<<<<<< HEAD
     warning "model output dir: $modelout"
 =======
 >>>>>>> updated all the scripts to support a new type of input data file
+=======
+    warning "model output dir: $modelout"
+>>>>>>> updated the training script and the test script. fixed a minor issue in the training script about the absolute paths.
     pushd ./codenn/src/model
     th ./main.lua -gpuidx $dev -language $lang -outdir $modelout -dev_ref_file $CODENN_WORK/valid.txt.$lang.ref
     popd
