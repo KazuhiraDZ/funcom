@@ -4,6 +4,14 @@ source time.sh
 today=`date +%Y-%m-%d.%H%M%S`
 log=test.log.$today
 
+RED='\033[0;31m'
+YELLOW='\033[0;33m'
+NC='\033[0m'
+
+function infoecho(){ printf "$1" | tee -a $log; }
+function warning(){ echo -e "${YELLOW}Warning: $1${NC}" | tee -a $log; }
+function error(){ echo -e "${RED}Error: $1${NC}" | tee -a $log; }
+
 ###
 ### Parsing the command line arguments
 ###
@@ -60,9 +68,9 @@ fi
 cwd=$(pwd)
 log=$cwd/$log
 
-echo "config file: $config, log file: $log" | tee -a $log
-exec {BASH_XTRACEFD}>>$log
-set -x
+infoecho "config file: $config, log file: $log\n"
+#exec {BASH_XTRACEFD}>>$log
+#set -x
 source download_codenn.sh
 
 ###
@@ -75,10 +83,10 @@ function checkconfig()
     local secvar=$(eval echo $sec[$var])
     
     if [ -z "${!secvar}" ]; then
-        echo "$0: cannot get config variable: $var in section $sec. Exit." | tee -a $log
+        infoecho "$0: cannot get config variable: $var in section $sec. Exit.\n"
         exit 1
     fi
-    printf "[$sec] $var: ${!secvar}, " | tee -a $log
+    infoecho "[$sec] $var: ${!secvar}, "
 }
 
 eval "$(cat $config  | python ./ini2arr.py)"
@@ -99,37 +107,38 @@ function absolutepath(){
 
 workdir=$(absolutepath ${CODENN[workdir]})
 predictout=$(absolutepath ${TEST[outdir]})
+modeldir=$(absolutepath ${TEST[modeldir]})
 
 mkdir -p $predictout
-printf "\n" | tee -a $log
+infoecho "\n"
 
 ###
 ### setting up environment paths
 ###
 export CODENN_DIR="$cwd/codenn"
 export CODENN_WORK=$workdir
-echo "CODENN_DIR: ${CODENN_DIR}, CODENN_WORK: ${CODENN_WORK}" | tee -a $log
+infoecho "CODENN_DIR: ${CODENN_DIR}, CODENN_WORK: ${CODENN_WORK}\n"
 
 ###
 ### test
 ###
-local encoders=($(ls -1v $cwd/${TEST[modeldir]}/cpp.encoder.e*))
-local decoders=($(ls -1v $cwd/${TEST[modeldir]}/cpp.decoder.e*))
+local encoders=($(ls -1v $modeldir/cpp.encoder.e*))
+local decoders=($(ls -1v $modeldir/cpp.decoder.e*))
 
 predictfile=${TEST[predict]}
 
 if [ -f '$predictout/$predictfile' ]; then
-    echo "$predictout/$predictfile exists! Exit."
-    exit 0
+    warning "$predictout/$predictfile exists! Move the file to: $predictout/${TEST[predict]}.old.$today"
+    mv $predictout/${TEST[predict]} "$predictout/${TEST[predict]}".old.$today
 else
     mkdir -p $predictout
     start=$(date +%s.%N)
-    echo "running codenn/src/model/predict.lua ... " | tee -a $log
-    echo "output file: $predictout/$predictfile"
+    infoecho "running codenn/src/model/predict.lua ... \n"
+    warning "output file: $predictout/$predictfile"
     pushd ./codenn/src/model
     th predict.lua -encoder ${encoders[-1]} -decoder ${decoders[-1]} -beamsize ${TEST[beamsize]} -gpuidx $dev -language cpp -outdir $predictout -outfile $predictfile
     popd
     end=$(date +%s.%N)
     diff=`show_time $end $start`
-    echo "codenn/src/model/predict.lua done: $diff" | tee -a $log
+    infoecho "codenn/src/model/predict.lua done: $diff"
 fi
