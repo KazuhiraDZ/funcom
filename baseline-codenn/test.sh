@@ -122,8 +122,8 @@ infoecho "CODENN_DIR: ${CODENN_DIR}, CODENN_WORK: ${CODENN_WORK}\n"
 ###
 ### test
 ###
-local encoders=($(ls -1v $modeldir/cpp.encoder.e*))
-local decoders=($(ls -1v $modeldir/cpp.decoder.e*))
+local encoders=($(ls -1v $modeldir/java.encoder.e*))
+local decoders=($(ls -1v $modeldir/java.decoder.e*))
 
 predictfile=${TEST[predict]}
 
@@ -136,7 +136,7 @@ else
     infoecho "running codenn/src/model/predict.lua ... \n"
     warning "output file: $predictout/$predictfile"
     pushd ./codenn/src/model
-    th predict.lua -encoder ${encoders[-1]} -decoder ${decoders[-1]} -beamsize ${TEST[beamsize]} -gpuidx $dev -language cpp -outdir $predictout -outfile $predictfile
+    th predict.lua -encoder ${encoders[-1]} -decoder ${decoders[-1]} -beamsize ${TEST[beamsize]} -gpuidx $dev -language java -outdir $predictout -outfile $predictfile
     popd
     end=$(date +%s.%N)
     diff=`show_time $end $start`
