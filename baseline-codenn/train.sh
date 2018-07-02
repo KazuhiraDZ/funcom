@@ -166,14 +166,7 @@ else
     mkdir -p $modelout
     start=$(date +%s.%N)
     infoecho "running codenn/src/model/main.lua ... \n"
-<<<<<<< HEAD
-<<<<<<< HEAD
     warning "model output dir: $modelout"
-=======
->>>>>>> updated all the scripts to support a new type of input data file
-=======
-    warning "model output dir: $modelout"
->>>>>>> updated the training script and the test script. fixed a minor issue in the training script about the absolute paths.
     pushd ./codenn/src/model
     th ./main.lua -gpuidx $dev -language $lang -outdir $modelout -dev_ref_file $CODENN_WORK/valid.txt.$lang.ref
     popd
