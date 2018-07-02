@@ -5,3 +5,4 @@ test.log*
 workdir/
 workdir_java*
 antlr-4.5.3-complete.jar
+workdir*
