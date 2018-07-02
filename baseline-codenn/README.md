@@ -7,6 +7,22 @@ python2, python3, tensorflow and keras in python2 and python3 \
 configparser, argparse modules \
 tested on Ubuntu 16 and Debian GNU/Linux 8.10
 
+### Default configuration and current results
+06/26/2018
+Input data file: /scratch/funcom_data/fundats-j1.pkl
+input vocab size: unknown
+output vocab size: unknown
+threshold for vocab: 2 (if the frequency of a word is smaller or equal to 2, the word is excluded from the vocabulary)
+maxlen of source sequences: 100
+maxlen of target sequences: 13
+batch size: 80
+training epochs: 137
+training time: 4d 6h 50m 46s
+model number: 1 (use one model for testing)
+beam size: 1 (no beam search in testing)
+testing time: 0d 0h 8m 13s
+BLEU: 6.03 (12.83, 7.19, 4.48, 3.19)
+
 ### Notes
 The test set entries are sorted based on fid in the [dataset](https://github.com/mcmillco/funcom/tree/master/alpha/dataprep). (so the results are sorted, too)
 
