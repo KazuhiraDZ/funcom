@@ -3,19 +3,19 @@
 ###
 ### Activate lua 5.2, make sure we are using the correct version
 ###
-if [[ $(hostname -s) = ash ]]; then
+torchactivate=''
+if [[ $(hostname -s) = ash  && -f /scratch/software/torch/install/bin/torch-activate ]]; then
     printf "ash: activate lua 5.2 ...\n"
-    if [ -f /scratch/software/torch/install/bin/torch-activate ]; then
-	. /scratch/software/torch/install/bin/torch-activate
-    else
-	echo "Cannot find torch in /scratch/software/torch/install/bin/torch-activate. Exit."
-	exit 1
-    fi
+    torchactivate=/scratch/software/torch/install/bin/torch-activate
+elif [[ $(hostname -s) = bishop && -f /home/siyuan/torch/install/bin/torch-activate ]]; then
+    printf "bishop: activate lua 5.2 ...\n"
+    torchactivate=/home/siyuan/torch/install/bin/torch-activate
+elif [ -f /scratch/software/torch/install/bin/torch-activate ]; then
+    torchactivate=/scratch/software/torch/install/bin/torch-activate
+fi
+
+if [[ -z $torchactivate ]]; then
+    printf "\n!!!Cannot find torch-activate. \n!!!Continue... \n!!!Make sure you have activated the lua 5.2 instead LuaJIT.\n\n"
 else
-    if [ -f /scratch/software/torch/install/bin/torch-activate ]; then
-	. /scratch/software/torch/install/bin/torch-activate
-    else
-	echo "Cannot find torch in /scratch/software/torch/install/bin/torch-activate."
-	printf "\n***\n***make sure you are using lua 5.2\n***\n"    
-    fi
+    . $torchactivate
 fi
