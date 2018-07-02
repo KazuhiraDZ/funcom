@@ -39,21 +39,23 @@ def bleu_so_far(refs, preds):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='')
-    parser.add_argument('--model-type', dest='modeltype', type=str, default='vanilla-lstm')
+    parser.add_argument('--model-type-a', dest='modeltypeA', type=str, default='vanilla-lstm')
+    parser.add_argument('--model-type-b', dest='modeltypeB', type=str, default='vanilla-lstm')
     parser.add_argument('--data-prep', dest='dataprep', type=str, default='../data/old')
     parser.add_argument('--outdir', dest='outdir', type=str, default='outdir')
     args = parser.parse_args()
     
     outdir = args.outdir
     dataprep = args.dataprep
-    modeltype = args.modeltype
+    modeltypeA = args.modeltypeA
+    modeltypeB = args.modeltypeB
 
     sys.path.append(dataprep)
     import Tokenizer
 
     prep('preparing predictions list... ')
-    preds = dict()
-    predicts = open('%s/predict-%s.txt' % (outdir, modeltype), 'r')
+    predsA = dict()
+    predicts = open('%s/predict-%s.txt' % (outdir, modeltypeA), 'r')
     for c, line in enumerate(predicts):
         (fid, pred) = line.split('\t')
         fid = int(fid)
@@ -61,7 +63,21 @@ if __name__ == '__main__':
         pred = fil(pred)
         if(len(pred) == 0):
             continue
-        preds[fid] = pred
+        predsA[fid] = pred
+    predicts.close()
+    drop()
+
+    prep('preparing predictions list... ')
+    predsB = dict()
+    predicts = open('%s/predict-%s.txt' % (outdir, modeltypeB), 'r')
+    for c, line in enumerate(predicts):
+        (fid, pred) = line.split('\t')
+        fid = int(fid)
+        pred = pred.split()
+        pred = fil(pred)
+        if(len(pred) == 0):
+            continue
+        predsB[fid] = pred
     predicts.close()
     drop()
 
@@ -73,7 +89,7 @@ if __name__ == '__main__':
     #for line in remfidsf:
     #    remfids.append(int(line))
 
-    refs = list()
+    refs = dict()
     newpreds = list()
     d = 0
     targets = open('%s/reference.txt' % (outdir), 'r')
@@ -81,40 +97,50 @@ if __name__ == '__main__':
         (fid, com) = line.split('\t')
         fid = int(fid)
 
-        #if not (fid in remfids):
-        #    continue
-
-        com = com.replace('fonts', 'UNK')
         com = com.split()
         com = fil(com)
+        
+        refs[fid] = com
 
-        #com = com[1:] # remove first word
+    betterA = list()
+    betterB = list()
+    ties = list()
 
-        #if com[0] in ['see', 'non', 'begin', 'get', 'gets', 'set', 'sets']:
-        #    continue
+    for fid in refs:
+        ref = refs[fid]
         
         try:
-            #if com == preds[fid]:
-            #    continue
-            #preds[fid] = preds[fid][1:] # remove first word
-            newpreds.append(preds[fid])
+            predA = predsA[fid]
+            predB = predsB[fid]
         except KeyError as ex:
             continue
         
-        refs.append([com])
+        bleuA = sentence_bleu([ref], predA, weights=(1,0,0,0))
+        bleuB = sentence_bleu([ref], predB, weights=(1,0,0,0))
         
-        d += 0
-        if(d > 0 and d % 10000 == 0):
-            print('status at %s:' % (d))
-            print(bleu_so_far(refs, preds[0:len(refs)]))
-            
-            print('sample output:')
-            for i in range(d-10, d):
-                print('%s' % preds[i])
-                print('%s' % refs[i])
-                print()
-            print()
+        if bleuA > bleuB:
+            betterA.append(fid)
+        elif bleuA < bleuB:
+            betterB.append(fid)
+        else:
+            ties.append(fid)
 
-    print('final status')
-    print(bleu_so_far(refs, newpreds))
+    print(len(betterA))
+    print(len(betterB))
+    print(len(ties))
+
+    betterAout = open('%s/betterA-%s.txt' % (outdir, modeltypeA), 'w')
+    betterBout = open('%s/betterB-%s.txt' % (outdir, modeltypeB), 'w')
+
+    for fid in betterA:
+        betterAout.write('%s\t%s\t%s\t%s\n' % (fid, ' '.join(predsA[fid]), ' '.join(predsB[fid]), ' '.join(refs[fid])))
+
+    for fid in betterB:
+        betterBout.write('%s\t%s\t%s\t%s\n' % (fid, ' '.join(predsA[fid]), ' '.join(predsB[fid]), ' '.join(refs[fid])))
+
+    betterAout.close()
+    betterBout.close()
+
+    #print('final status')
+    #print(bleu_so_far(refs, newpreds))
 
