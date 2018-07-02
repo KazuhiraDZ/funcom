@@ -70,19 +70,6 @@ source activate_lua.sh
 ###
 ### Parsing the config file
 ###
-function checkconfig()
-{
-    local sec=$1
-    local var=$2
-    local secvar=$(eval echo $sec[$var])
-    
-    if [ -z "${!secvar}" ]; then
-        infoecho "$0: cannot get config variable: $var in section $sec. Exit.\n"
-        exit 1
-    fi
-    infoecho "[$sec] $var: ${!secvar}, "
-}
-
 eval "$(cat $config  | python ./ini2arr.py)"
 checkconfig 'CODENN' 'workdir'
 checkconfig 'PREPDATA' 'outdir'
