@@ -93,8 +93,8 @@ infoecho "CODENN_DIR: ${CODENN_DIR}, CODENN_WORK: ${CODENN_WORK}\n"
 ###
 ### test
 ###
-local encoders=($(ls -1v $modeldir/java.encoder.e*))
-local decoders=($(ls -1v $modeldir/java.decoder.e*))
+encoders=($(ls -1v $modeldir/java.encoder.e*))
+decoders=($(ls -1v $modeldir/java.decoder.e*))
 
 predictfile=${TEST[predict]}
 
@@ -112,6 +112,7 @@ th predict.lua -encoder ${encoders[-1]} -decoder ${decoders[-1]} -beamsize ${TES
 popd
 end=$(date +%s.%N)
 diff=`show_time $end $start`
-infoecho "codenn/src/model/predict.lua done: $diff"
+infoecho "codenn/src/model/predict.lua done: $diff\n"
 
-
+infoecho "\nCalculating BLEU ... reference file: $workdir/test.txt.java.ref.final prediction file: $predictout/$predictfile\n"
+bash ../eval/nltk_bleu.sh $workdir/test.txt.java.ref.final $predictout/$predictfile
