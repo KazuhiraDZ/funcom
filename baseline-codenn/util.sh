@@ -1,5 +1,26 @@
 #!/bin/bash
 
+RED='\033[0;31m'
+YELLOW='\033[0;33m'
+NC='\033[0m'
+
+function infoecho(){ printf "$1" | tee -a $log; }
+function warning(){ echo -e "${YELLOW}Warning: $1${NC}" | tee -a $log; }
+function error(){ echo -e "${RED}Error: $1${NC}" | tee -a $log; }
+
+function checkconfig()
+{
+    local sec=$1
+    local var=$2
+    local secvar=$(eval echo $sec[$var])
+    
+    if [ -z "${!secvar}" ]; then
+        infoecho "$0: cannot get config variable: $var in section $sec. Exit.\n"
+        exit 1
+    fi
+    infoecho "[$sec] $var: ${!secvar}, "
+}
+
 function absolutepath(){
     local inpath=$1
     local cwd=$2
@@ -38,10 +59,3 @@ function show_time () {
     echo "${day}d ${hour}h ${min}m ${sec}s"
 }
 
-RED='\033[0;31m'
-YELLOW='\033[0;33m'
-NC='\033[0m'
-
-function infoecho(){ printf "$1" | tee -a $log; }
-function warning(){ echo -e "${YELLOW}Warning: $1${NC}" | tee -a $log; }
-function error(){ echo -e "${RED}Error: $1${NC}" | tee -a $log; }
