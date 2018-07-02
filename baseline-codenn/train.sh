@@ -1,16 +1,8 @@
 #!/bin/bash
-source time.sh
+source util.sh
 
 today=`date +%Y-%m-%d.%H%M%S`
 log=train.log.$today
-
-RED='\033[0;31m'
-YELLOW='\033[0;33m'
-NC='\033[0m'
-
-function infoecho(){ printf "$1" | tee -a $log; }
-function warning(){ echo -e "${YELLOW}Warning: $1${NC}" | tee -a $log; }
-function error(){ echo -e "${RED}Error: $1${NC}" | tee -a $log; }
 
 ###
 ### Parsing the command line arguments
@@ -68,19 +60,11 @@ fi
 cwd=$(pwd)
 log=$cwd/$log
 
-function absolutepath(){
-    local inpath=$1
-    if [[ "$inpath" = /* ]]; then
-        echo "$inpath"
-    else
-        echo "$cwd/$inpath"
-    fi
-}
-
 infoecho "config file: $config, log file: $log \n"
 # exec {BASH_XTRACEFD}>>$log
 # set -x
 source download_codenn.sh
+source prepare_antlr.sh
 source activate_lua.sh
 
 ###
@@ -121,7 +105,7 @@ batch_size=${PREPDATA[batch_size]}
 export PYTHONPATH="${PYTHONPATH}:$cwd/codenn/src/"
 export CODENN_DIR="$cwd/codenn"
 
-workdir=$(absolutepath ${CODENN[workdir]})
+workdir=$(absolutepath ${CODENN[workdir]} $cwd)
 export CODENN_WORK=$workdir
 
 infoecho "PYTHONPATH: $PYTHONPATH, CODENN_DIR: ${CODENN_DIR}, CODENN_WORK: ${CODENN_WORK}\n"
@@ -184,7 +168,7 @@ fi
 ###
 ### CODENN: train
 ###
-modelout=$(absolutepath ${TRAIN[outdir]})
+modelout=$(absolutepath ${TRAIN[outdir]} $cwd)
 
 if test "$(ls -A "$modelout")"; then
     infoecho "the output directory for model files is not empty.\n"
