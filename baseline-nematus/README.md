@@ -10,7 +10,7 @@ tested on Ubuntu 16 and Debian GNU/Linux 8.10 with **/scratch/funcom_data**
 input files: /scratch/funcom_data/: coms.test, coms.train, coms.val, dats.test, dats.train, dats.val \
 input vocab size: 50000 \
 target vocab size: 44707 \
-maxlen of target sequences: 13 \ 
+maxlen of target sequences: 13 \
 maxlen of source sequences: 100 \
 stopping criterion: the default stopping criterion Nematus use (early-stopping-method) \
 training time: 0d 11h 35m 30s \
@@ -19,8 +19,8 @@ beam width = 1 (disable the beam search) \
 model number = 1 (no ensemble test) \
 testing time (tested on bishop): 0d 5h 39m 24s \
 BLEU score: 23.90 (48.17, 27.66, 17.98, 13.62) \
-models are on ash: /scratch/funcom_old/baseline-nematus/workdir_java03/models/
-results are on ash: /scratch/funcom_old/baseline-nematus/workdir_java03/test-beam1-model1
+models are on ash: ```/scratch/funcom_old/baseline-nematus/workdir_java03/models/``` \
+results are on ash: ```/scratch/funcom_old/baseline-nematus/workdir_java03/test-beam1-model1```
 
 
 ### Overview of this baseline
