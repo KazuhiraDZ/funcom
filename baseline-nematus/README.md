@@ -4,7 +4,7 @@ Scripts for running [nematus-tensorflow](https://github.com/EdinburghNLP/nematus
 
 ### Prerequisites
 python3, python2, keras, tensorflow in python3 & python2\
-tested on Ubuntu 16 and Debian GNU/Linux 8.10 with **/scratch/funcom/data/D_001**
+tested on Ubuntu 16 and Debian GNU/Linux 8.10 with **/scratch/funcom_data**
 
 ### Default configuration and current results
 input files: /scratch/funcom_data/: coms.test, coms.train, coms.val, dats.test, dats.train, dats.val \
