@@ -112,10 +112,13 @@ if [ "$(ls -A ${TEST[datadir]}/testsplitfiles)" ]; then
     warning "the testsplitfiles are not empty. Will use the existing test files AND prediction files!"
 else
     split -a 5 -d -l 100 ${TEST[datadir]}/test.src.txt ${TEST[datadir]}/testsplitfiles/test.src.txt_
+    split -a 5 -d -l 100 ${TEST[datadir]}/test.tgt.txt ${TEST[datadir]}/testsplitfiles/test.tgt.txt_
 fi
 
 if [ -f ${TEST[outdir]}/${TEST[predict]} ]; then
-    mv ${TEST[outdir]}/${TEST[predict]} "${TEST[outdir]}/${TEST[predict]}".old.$today
+    mv ${TEST[outdir]}/${TEST[predict]} "${TEST[outdir]}/${TEST[predict]}".$today
+    mv ${TEST[outdir]}/${TEST[predict]}.ref "${TEST[outdir]}/${TEST[predict]}".ref.$today
+    mv ${TEST[outdir]}/${TEST[predict]}.error "${TEST[outdir]}/${TEST[predict]}".error.$today
 fi
 rm -f "${TEST[outdir]}/${TEST[predict]}".src
 
@@ -126,6 +129,7 @@ ls -v `find ${TEST[datadir]}/testsplitfiles/ -name "test.src.txt_[0-9][0-9][0-9]
     	warning "Skip running nematus. Using the existing ${filename}.predict"
     	cat ${filename}.predict >> "${TEST[outdir]}/${TEST[predict]}"
     	cat $filename >> "${TEST[outdir]}/${TEST[predict]}".src
+	cat ${filename/src/tgt} >> "${TEST[outdir]}/${TEST[predict]}".ref
     	continue
     fi
 
@@ -137,11 +141,13 @@ ls -v `find ${TEST[datadir]}/testsplitfiles/ -name "test.src.txt_[0-9][0-9][0-9]
 	# rm -fr tmp # sed 's!<s>\s!!g' ${filename}.predict > tmp # sed 's!\s</s>\s*!!g' tmp >> "${TEST[outdir]}/${TEST[predict]}"
 	cat ${filename}.predict >> "${TEST[outdir]}/${TEST[predict]}"
     	cat $filename >> "${TEST[outdir]}/${TEST[predict]}".src
+	cat ${filename/src/tgt} >> "${TEST[outdir]}/${TEST[predict]}".ref
     else
     	rm -fr ${filename}.predict.tmp
 
 	warning "Nematus did not generate prediciton file for $filename. Try splitting it again."
     	split -a 5 -d -l 5 $filename ${filename}_
+	split -a 5 -d -l 5 ${filename/src/tgt} ${filename/src/tgt}_
 	tmpfilename="`basename $filename`"	
 	ls -v `find ${TEST[datadir]}/testsplitfiles/ -name "${tmpfilename}_[0-9][0-9][0-9][0-9][0-9]"` | while read smaller_filename; do
 	    warning "running nematus on ${smaller_filename} ...\n"
@@ -150,6 +156,7 @@ ls -v `find ${TEST[datadir]}/testsplitfiles/ -name "test.src.txt_[0-9][0-9][0-9]
 		warning "Skip running nematus. Using the existing ${smaller_filename}.predict"
     		cat ${smaller_filename}.predict >> "${TEST[outdir]}/${TEST[predict]}"
 		cat ${smaller_filename} >> "${TEST[outdir]}/${TEST[predict]}".src
+		cat ${smaller_filename/src/tgt} >> "${TEST[outdir]}/${TEST[predict]}".ref
 		cat ${smaller_filename}.predict >> ${filename}.predict.tmp
     		continue
 	    fi
@@ -161,12 +168,14 @@ ls -v `find ${TEST[datadir]}/testsplitfiles/ -name "test.src.txt_[0-9][0-9][0-9]
     	    if [ -s ${smaller_filename}.predict ]; then
 		cat ${smaller_filename}.predict >> "${TEST[outdir]}/${TEST[predict]}"
     		cat ${smaller_filename} >> "${TEST[outdir]}/${TEST[predict]}".src
+		cat ${smaller_filename/src/tgt} >> "${TEST[outdir]}/${TEST[predict]}".ref
 		cat ${smaller_filename}.predict >> ${filename}.predict.tmp
     	    else
 		rm -fr ${smaller_filename}.predict.tmp
 		
 		warning "Nematus did not generate prediciton file for ${smaller_filename}. The final try: splitting it into one-line file."
 		split -a 5 -d -l 1 ${smaller_filename} ${smaller_filename}_
+		split -a 5 -d -l 1 ${smaller_filename/src/tgt} ${smaller_filename/src/tgt}_
 		tmpsmaller_filename="`basename ${smaller_filename}`"
 		ls -v `find ${TEST[datadir]}/testsplitfiles/ -name "${tmpsmaller_filename}_[0-9][0-9][0-9][0-9][0-9]"` | while read smallest_filename; do
 		    warning "running nematus on ${smallest_filename} ... \n"
@@ -175,6 +184,7 @@ ls -v `find ${TEST[datadir]}/testsplitfiles/ -name "test.src.txt_[0-9][0-9][0-9]
 			warning "Skipping running nematus. Using the existing ${smallest_filename}.predict"
 			cat ${smallest_filename}.predict >> "${TEST[outdir]}/${TEST[predict]}"
 			cat ${smallest_filename} >> "${TEST[outdir]}/${TEST[predict]}".src
+			cat ${smallest_filename/src/tgt} >> "${TEST[outdir]}/${TEST[predict]}".ref
 			cat ${smallest_filename}.predict >> ${smaller_filename}.predict.tmp
 			continue
 		    fi
@@ -184,9 +194,12 @@ ls -v `find ${TEST[datadir]}/testsplitfiles/ -name "test.src.txt_[0-9][0-9][0-9]
 		    if [ -s ${smallest_filename}.predict ]; then
 			cat ${smallest_filename}.predict >> "${TEST[outdir]}/${TEST[predict]}"
 			cat ${smallest_filename} >> "${TEST[outdir]}/${TEST[predict]}".src
+			cat ${smallest_filename/src/tgt} >> "${TEST[outdir]}/${TEST[predict]}".ref
 			cat ${smallest_filename}.predict >> ${smaller_filename}.predict.tmp
 		    else
     			error "Nematus still cannot generate predictions for $smallest_filename."
+			echo ${smallest_filename} >> "${TEST[outdir]}/${TEST[predict]}".error
+			cat ${smallest_filename} >> "${TEST[outdir]}/${TEST[predict]}".error
 		    fi
 		done
     		
@@ -199,5 +212,8 @@ done
 end=$(date +%s.%N)
 diff=`show_time $end $start`
 infoecho "test: $diff\n"
+
+infoecho '\nCalculating BLEU... Reference file: "${TEST[outdir]}/${TEST[predict]}".ref, prediction file: ${TEST[outdir]}/${TEST[predict]}'
+bash ../eval/nltk_bleu.sh "${TEST[outdir]}/${TEST[predict]}".ref ${TEST[outdir]}/${TEST[predict]}
 
 exit 0

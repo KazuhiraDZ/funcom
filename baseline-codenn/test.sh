@@ -1,5 +1,5 @@
 #!/bin/bash
-source time.sh
+source util.sh
 
 today=`date +%Y-%m-%d.%H%M%S`
 log=test.log.$today
@@ -22,7 +22,7 @@ while getopts ":c:d:l:h" opt; do
 	config=$OPTARG
 	;;
     d )
-	dev=$OPTARG
+	dev=$((OPTARG+1)) # codenn (which uses lua torch) specify GPU device ids from 1
 	;;
     l )
 	log=$OPTARG
@@ -60,27 +60,15 @@ fi
 cwd=$(pwd)
 log=$cwd/$log
 
-echo "config file: $config, log file: $log" | tee -a $log
-exec {BASH_XTRACEFD}>>$log
-set -x
+infoecho "config file: $config, log file: $log\n"
+#exec {BASH_XTRACEFD}>>$log
+#set -x
 source download_codenn.sh
+source activate_lua.sh
 
 ###
 ### Parsing the config file
 ###
-function checkconfig()
-{
-    local sec=$1
-    local var=$2
-    local secvar=$(eval echo $sec[$var])
-    
-    if [ -z "${!secvar}" ]; then
-        echo "$0: cannot get config variable: $var in section $sec. Exit." | tee -a $log
-        exit 1
-    fi
-    printf "[$sec] $var: ${!secvar}, " | tee -a $log
-}
-
 eval "$(cat $config  | python ./ini2arr.py)"
 checkconfig 'CODENN' 'workdir'
 checkconfig 'TEST' 'modeldir'
@@ -88,48 +76,43 @@ checkconfig 'TEST' 'beamsize'
 checkconfig 'TEST' 'predict'
 checkconfig 'TEST' 'outdir'
 
-function absolutepath(){
-    local inpath=$1
-    if [[ "$inpath" = /* ]]; then
-        echo "$inpath"
-    else
-        echo "$cwd/$inpath"
-    fi
-}
-
-workdir=$(absolutepath ${CODENN[workdir]})
-predictout=$(absolutepath ${TEST[outdir]})
+workdir=$(absolutepath ${CODENN[workdir]} $cwd)
+predictout=$(absolutepath ${TEST[outdir]} $cwd)
+modeldir=$(absolutepath ${TEST[modeldir]} $cwd)
 
 mkdir -p $predictout
-printf "\n" | tee -a $log
+infoecho "\n"
 
 ###
 ### setting up environment paths
 ###
 export CODENN_DIR="$cwd/codenn"
 export CODENN_WORK=$workdir
-echo "CODENN_DIR: ${CODENN_DIR}, CODENN_WORK: ${CODENN_WORK}" | tee -a $log
+infoecho "CODENN_DIR: ${CODENN_DIR}, CODENN_WORK: ${CODENN_WORK}\n"
 
 ###
 ### test
 ###
-local encoders=($(ls -1v $cwd/${TEST[modeldir]}/cpp.encoder.e*))
-local decoders=($(ls -1v $cwd/${TEST[modeldir]}/cpp.decoder.e*))
+encoders=($(ls -1v $modeldir/java.encoder.e*))
+decoders=($(ls -1v $modeldir/java.decoder.e*))
 
 predictfile=${TEST[predict]}
 
 if [ -f '$predictout/$predictfile' ]; then
-    echo "$predictout/$predictfile exists! Exit."
-    exit 0
-else
-    mkdir -p $predictout
-    start=$(date +%s.%N)
-    echo "running codenn/src/model/predict.lua ... " | tee -a $log
-    echo "output file: $predictout/$predictfile"
-    pushd ./codenn/src/model
-    th predict.lua -encoder ${encoders[-1]} -decoder ${decoders[-1]} -beamsize ${TEST[beamsize]} -gpuidx $dev -language cpp -outdir $predictout -outfile $predictfile
-    popd
-    end=$(date +%s.%N)
-    diff=`show_time $end $start`
-    echo "codenn/src/model/predict.lua done: $diff" | tee -a $log
+    warning "$predictout/$predictfile exists! Move the file to: $predictout/${TEST[predict]}.old.$today"
+    mv $predictout/${TEST[predict]} "$predictout/${TEST[predict]}".old.$today
 fi
+
+mkdir -p $predictout
+start=$(date +%s.%N)
+infoecho "running codenn/src/model/predict.lua ... \n"
+warning "output file: $predictout/$predictfile"
+pushd ./codenn/src/model
+th predict.lua -encoder ${encoders[-1]} -decoder ${decoders[-1]} -beamsize ${TEST[beamsize]} -gpuidx $dev -language java -outdir $predictout -outfile $predictfile
+popd
+end=$(date +%s.%N)
+diff=`show_time $end $start`
+infoecho "codenn/src/model/predict.lua done: $diff\n"
+
+infoecho "\nCalculating BLEU ... reference file: $workdir/test.txt.java.ref.final prediction file: $predictout/$predictfile\n"
+bash ../eval/nltk_bleu.sh $workdir/test.txt.java.ref.final $predictout/$predictfile
