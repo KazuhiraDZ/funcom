@@ -71,6 +71,7 @@ def fil(com, revstem):
                 ret.append(revstem[w])
             except KeyError as ex:
                 ret.append(w)
+    ret = ret[0]
     return ret
 
 def bleu_so_far(refs, preds):
@@ -184,8 +185,8 @@ if __name__ == '__main__':
         except KeyError as ex:
             continue
         
-        bleuA = sentence_bleu([ref], predA)
-        bleuB = sentence_bleu([ref], predB)
+        bleuA = sentence_bleu([ref], predA, weights=(1,0,0,0))
+        bleuB = sentence_bleu([ref], predB, weights=(1,0,0,0))
         
         lssA = titlesim(predA, ref)
         lssB = titlesim(predB, ref)
@@ -236,8 +237,8 @@ if __name__ == '__main__':
     print(len(LbetterB))
     print(len(Lties))
 
-    betterAout = open('%s/BbetterA-%s.txt' % (outdir, modeltypeA), 'w')
-    betterBout = open('%s/BbetterB-%s.txt' % (outdir, modeltypeB), 'w')
+    betterAout = open('%s/BfbetterA-%s.txt' % (outdir, modeltypeA), 'w')
+    betterBout = open('%s/BfbetterB-%s.txt' % (outdir, modeltypeB), 'w')
 
     for fid in BbetterA:
         betterAout.write('%s\t%s (%s)\t%s (%s)\t%s\n' % (fid, ' '.join(predsA[fid]), bleusA[fid],  ' '.join(predsB[fid]), bleusB[fid], ' '.join(refs[fid])))
@@ -248,8 +249,8 @@ if __name__ == '__main__':
     betterAout.close()
     betterBout.close()
 
-    betterAout = open('%s/LbetterA-%s.txt' % (outdir, modeltypeA), 'w')
-    betterBout = open('%s/LbetterB-%s.txt' % (outdir, modeltypeB), 'w')
+    betterAout = open('%s/LfbetterA-%s.txt' % (outdir, modeltypeA), 'w')
+    betterBout = open('%s/LfbetterB-%s.txt' % (outdir, modeltypeB), 'w')
 
     for fid in LbetterA:
         betterAout.write('%s\t%s (%s)\t%s (%s)\t%s\n' % (fid, ' '.join(predsA[fid]), lssesA[fid],  ' '.join(predsB[fid]), lssesB[fid], ' '.join(refs[fid])))
