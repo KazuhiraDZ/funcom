@@ -7,11 +7,13 @@ python3, python2, keras, tensorflow in python3 & python2\
 tested on Ubuntu 16 and Debian GNU/Linux 8.10 with **/scratch/funcom_data**
 
 ### Default configuration and current results
+06/20/2018 \
 input files: /scratch/funcom_data/: coms.test, coms.train, coms.val, dats.test, dats.train, dats.val \
 input vocab size: 50000 \
 target vocab size: 44707 \
 maxlen of target sequences: 13 \
 maxlen of source sequences: 100 \
+actual train/dev/test sets sizes: 1234376/75608/53644 \
 stopping criterion: the default stopping criterion Nematus use (early-stopping-method) \
 training time: 0d 11h 35m 30s \
 number of epochs: 14 \

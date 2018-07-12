@@ -105,8 +105,9 @@ fi
 
 mkdir -p $predictout
 start=$(date +%s.%N)
-infoecho "running codenn/src/model/predict.lua ... \n"
+infoecho "running codenn/src/model/predict.lua ...  encoder:${encoders[-1]} decoder:${decoders[-1]}\n"
 warning "output file: $predictout/$predictfile"
+exit 0 
 pushd ./codenn/src/model
 th predict.lua -encoder ${encoders[-1]} -decoder ${decoders[-1]} -beamsize ${TEST[beamsize]} -gpuidx $dev -language java -outdir $predictout -outfile $predictfile
 popd
