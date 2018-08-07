@@ -8,6 +8,26 @@ configparser, argparse modules \
 tested on Ubuntu 16 and Debian GNU/Linux 8.10
 
 ### Default configuration and current results
+08/07/2018
+(informal, manually checked) Peak cpu memory usage: 12GB
+(informal, manually checked) Peak gpu memory usage: 7GB
+so, don't run it on bishop in the future (just to be safe and avoid extra work).
+
+### Notes
+The test set entries are sorted based on fid in the [dataset](https://github.com/mcmillco/funcom/tree/master/alpha/dataprep). (so the results are sorted, too)
+
+### Overview of this baseline
+
+Usage:
+1) modify the codenn.ini based on the above workflow image.\
+   most likely, you need to change ```dataprep``` under ```[PREPDATA]``` to the folder that has alldata.pkl, comstokenizer.pkl and datstokenizer.pkl
+2) ```bash train.sh -c codenn.ini -d 0``` \
+   run ```bash train.sh -h``` to see other options \
+   Note that GPU device id starts from 0.
+
+3) ```bash test.sh -c codenn.ini -d 1```
+
+### Obsolete
 06/26/2018 \
 Input data file: /scratch/funcom_data/: fundats-j1.pkl, coms.test, coms.train, coms.val, dats.test, dats.train, dats.val \
 input vocab size: unknown \
@@ -26,18 +46,3 @@ BLEU: 6.03 (12.83, 7.19, 4.48, 3.19)
 
 models are on ash: ```/scratch/funcom_old/baseline-codenn/workdir_java03/models/``` \
 results are on ash: ```/scratch/funcom_old/baseline-codenn/workdir_java03/test-beam1-model1/```
-
-
-### Notes
-The test set entries are sorted based on fid in the [dataset](https://github.com/mcmillco/funcom/tree/master/alpha/dataprep). (so the results are sorted, too)
-
-### Overview of this baseline
-
-Usage:
-1) modify the codenn.ini based on the above workflow image.\
-   most likely, you need to change ```dataprep``` under ```[PREPDATA]``` to the folder that has alldata.pkl, comstokenizer.pkl and datstokenizer.pkl
-2) ```bash train.sh -c codenn.ini -d 0``` \
-   run ```bash train.sh -h``` to see other options \
-   Note that GPU device id starts from 0.
-
-3) ```bash test.sh -c codenn.ini -d 1```
