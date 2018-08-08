@@ -8,9 +8,9 @@ configparser, argparse modules \
 tested on Ubuntu 16 and Debian GNU/Linux 8.10
 
 ### Default configuration and current results
-08/07/2018
-(informal, manually checked) Peak cpu memory usage: 12GB
-(informal, manually checked) Peak gpu memory usage: 7GB
+08/07/2018 \
+(informal, manually checked) Peak cpu memory usage: 12GB \
+(informal, manually checked) Peak gpu memory usage: 9GB \
 so, don't run it on bishop in the future (just to be safe and avoid extra work).
 
 ### Notes
