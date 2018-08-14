@@ -3,7 +3,7 @@
 Scripts for running [codenn](https://github.com/sjiang1/codenn) on our data sets.
 
 ### Prerequisites
-python2, python3, tensorflow and keras in python2 and python3 \
+python2, python3, pip, ntlk, tensorflow and keras in python2 and python3 \
 configparser, argparse modules \
 tested on Ubuntu 16 and Debian GNU/Linux 8.10
 
