@@ -94,8 +94,8 @@ if __name__ == '__main__':
     parser.add_argument('modelfile', type=str, default=None)
     parser.add_argument('--num-procs', dest='numprocs', type=int, default='4')
     parser.add_argument('--gpu', dest='gpu', type=str, default='')
-    parser.add_argument('--data', dest='dataprep', type=str, default='../data/makedataset')
-    parser.add_argument('--outdir', dest='outdir', type=str, default='outdir')
+    parser.add_argument('--data', dest='dataprep', type=str, default='/scratch/funcom/data/standard')
+    parser.add_argument('--outdir', dest='outdir', type=str, default='/scratch/funcom/data/outdir/predictions')
     parser.add_argument('--batch-size', dest='batchsize', type=int, default=200)
     parser.add_argument('--num-inputs', dest='numinputs', type=int, default=3)
     parser.add_argument('--model-type', dest='modeltype', type=str, default=None)
@@ -199,8 +199,8 @@ if __name__ == '__main__':
     comstart = np.zeros(comlen)
     st = comstok.w2i['<s>']
     comstart[0] = st
-    outf = open("./outdir/predict-{}.txt".format(outfile), 'w')
-    print("writing to file - outdir/predict-{}.txt".format(outfile))
+    outf = open(outdir+"/predict-{}.txt".format(outfile), 'w')
+    print("writing to file - "+outdir+"/predict-{}.txt".format(outfile))
     batch_sets = [allfids[i:i+batchsize] for i in range(0, len(allfids), batchsize)]
  
     prep("Computing Predictions...\n")
