@@ -1,8 +1,0 @@
-These are the actual model implementations.
-
-To add a new model, do the following:
-
-1) Create a model Python file with the format/functions as the other model files.  For experimental models, please use the convention [yourname][number].py.  This filename should also serve as the "modeltype" parameter to the scripts, and is appended to saved trained models and prediction output.
-
-2) Edit model.py in the funcom/ directory to include your model name in the "if" block, and of course import your model.
-
