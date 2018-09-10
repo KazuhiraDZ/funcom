@@ -24,9 +24,6 @@ from model import create_model
 from myutils import prep, drop, batch_gen, init_tf, batch_gen_train_bleu, seq2sent
 from nltk.translate.bleu_score import corpus_bleu, sentence_bleu
 
-
-
-
 class mycallback(Callback):
     def __init__(self, val, steps):
         self.valgen = val
@@ -131,6 +128,7 @@ if __name__ == '__main__':
     dset.add_argument('--body', dest='body', action='store_true', default=False)
     dset.add_argument('--sig', dest='sig', action='store_true', default=False)
     dset.add_argument('--stand', dest='stand', action='store_true', default=False)
+    dset.add_argument('--septs', dest='septs', action='store_true', default=False)
     args = parser.parse_args()
     
     outdir = args.outdir
@@ -147,7 +145,7 @@ if __name__ == '__main__':
     name = args.name
     sig = args.sig
     stand = args.stand
-
+    septs = args.septs
 
     sys.path.append(dataprep)
     import tokenizer
@@ -181,8 +179,17 @@ if __name__ == '__main__':
         dataprep = '../data/standard'
         modelname = 'standard_'+modeltype
 
+    elif septs:
+        dataprep = '/scratch/funcom/data/separate_text_struct'
+        modelname = 'septs_'+modeltype
+
     prep('loading tokenizers... ')
-    datstok = pickle.load(open('%s/dats.tok' % (dataprep), 'rb'), encoding='UTF-8')
+    if septs:
+        tdatstok = pickle.load(open('%s/tdats.tok' % (dataprep), 'rb'), encoding='UTF-8')
+        sdatstok = pickle.load(open('%s/sdats.tok' % (dataprep), 'rb'), encoding='UTF-8')
+    else:
+        datstok = pickle.load(open('%s/dats.tok' % (dataprep), 'rb'), encoding='UTF-8')
+        
     comstok = pickle.load(open('%s/coms.tok' % (dataprep), 'rb'), encoding='UTF-8')
     if not sbt:
         smltok = pickle.load(open('%s/smls.tok' % (dataprep), 'rb'), encoding='UTF-8')
@@ -192,24 +199,12 @@ if __name__ == '__main__':
     seqdata = pickle.load(open('%s/dataset.pkl' % (dataprep), 'rb'))
     drop()
 
-    if challenge:
-        v = np.zeros(100)
-        for key, val in seqdata['dtrain'].items():
-            seqdata['dtrain'][key] = v
-
-        for key, val in seqdata['dval'].items():
-            seqdata['dval'][key] = v
-    
-        for key, val in seqdata['dtest'].items():
-            seqdata['dtest'][key] = v
-
-        print(seqdata['dtrain'][list(seqdata['dtrain'].keys())[0]])
-        print(seqdata['dval'][list(seqdata['dval'].keys())[0]])
-        print(seqdata['dtest'][list(seqdata['dtest'].keys())[0]])
-
     steps = int(len(seqdata['ctrain'])/batch_size)+1
     valsteps = int(len(seqdata['cval'])/100)+1
-    datvocabsize = datstok.vocab_size
+    if septs:
+        datvocabsize = tdatstok.vocab_size
+    else:
+        datvocabsize = datstok.vocab_size
     comvocabsize = comstok.vocab_size
     if not sbt:
         smlvocabsize = smltok.vocab_size
@@ -235,7 +230,7 @@ if __name__ == '__main__':
     config['comvocabsize'] = comvocabsize
     if not sbt:
      config['smlvocabsize'] = smlvocabsize
-    config['datlen'] = len(list(seqdata['dtrain'].values())[0])
+    config['datlen'] = len(list(seqdata['dttrain'].values())[0])
     config['comlen'] = len(list(seqdata['ctrain'].values())[0])
     if not sbt:
         config['smllen'] = len(list(seqdata['strain'].values())[0])

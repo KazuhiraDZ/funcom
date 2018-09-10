@@ -65,7 +65,7 @@ class batch_gen(keras.utils.Sequence):
         self.batch_size = batch_size
         self.seqdata = seqdata
         self.mt = mt
-        self.allfids = list(seqdata['d%s' % (tt)].keys())
+        self.allfids = list(seqdata['dt%s' % (tt)].keys())
         self.num_inputs = num_inputs
         random.shuffle(self.allfids)
 
@@ -85,13 +85,15 @@ class batch_gen(keras.utils.Sequence):
 
         if self.num_inputs == 3:
             return self.divideseqs_ast(batchfids, self.seqdata, self.comvocabsize, self.tt)
+        elif self.num_inputs == 4:
+            return self.divideseqs_ast_septs(batchfids, self.seqdata, self.comvocabsize, self.tt)
         elif self.mt == 'crazy':
             return self.divideseqs_crazy(batchfids, self.seqdata, self.comvocabsize, self.tt)
         else:
             return self.divideseqs(batchfids, self.seqdata, self.comvocabsize, self.tt)
 
     def __len__(self):
-        return int(np.ceil(len(list(self.seqdata['d%s' % (self.tt)]))/self.batch_size))
+        return int(np.ceil(len(list(self.seqdata['dt%s' % (self.tt)]))/self.batch_size))
 
     def on_epoch_end(self):
         random.shuffle(self.allfids)
@@ -187,6 +189,60 @@ class batch_gen(keras.utils.Sequence):
 
         return [[datseqs, comseqs, smlseqs], comouts]
 
+    def divideseqs_ast_septs(self, batchfids, seqdata, comvocabsize, tt):
+        import keras.utils
+        
+        tdatseqs = list()
+        sdatseqs = list()
+        comseqs = list()
+        smlseqs = list()
+        comouts = list()
+
+        limit = -1
+        c = 0
+        for fid in batchfids: #seqdata['coms_%s_seqs' % (tt)].keys():
+
+            wtdatseq = seqdata['dt%s' % (tt)][fid]
+            wsdatseq = seqdata['ds%s' % (tt)][fid]
+            wcomseq = seqdata['c%s' % (tt)][fid]
+            wsmlseq = seqdata['s%s' % (tt)][fid]
+            # if(len(wdatseq)<100):
+            #     continue
+
+            for i in range(0, len(wcomseq)):
+                tdatseqs.append(wtdatseq)
+                sdatseqs.append(wsdatseq)
+                smlseqs.append(wsmlseq)
+                # slice up whole comseq into seen sequence and current sequence
+                # [a b c d] => [] [a], [a] [b], [a b] [c], [a b c] [d], ...
+                comseq = wcomseq[0:i]
+                comout = wcomseq[i]
+                comout = keras.utils.to_categorical(comout, num_classes=comvocabsize)
+                #print(comout)
+
+                # extend length of comseq to expected sequence size
+                # the model will be expecting all input vectors to have the same size
+                for j in range(0, len(wcomseq)):
+                    try:
+                        comseq[j]
+                    except IndexError as ex:
+                        comseq = np.append(comseq, 0)
+                #comseq = [sum(x) for x in zip(comseq, [0] * len(wcomseq))]
+
+                comseqs.append(comseq)
+                comouts.append(np.asarray(comout))
+
+            c += 1
+            if(c == limit):
+                break
+
+        tdatseqs = np.asarray(tdatseqs)
+        sdatseqs = np.asarray(sdatseqs)
+        smlseqs = np.asarray(smlseqs)
+        comseqs = np.asarray(comseqs)
+        comouts = np.asarray(comouts)
+
+        return [[tdatseqs, sdatseqs, comseqs, smlseqs], comouts]
 
 class batch_gen_train_bleu(keras.utils.Sequence):
     def __init__(self, seqdata, comvocabsize, tt, mt, num_input, batch_size=32):
