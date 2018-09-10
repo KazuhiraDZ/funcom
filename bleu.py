@@ -40,8 +40,8 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='')
     parser.add_argument('input', type=str, default=None)
-    parser.add_argument('--data', dest='dataprep', type=str, default='../data/standard/output')  
-    parser.add_argument('--outdir', dest='outdir', type=str, default='outdir')
+    parser.add_argument('--data', dest='dataprep', type=str, default='/scratch/funcom/data/standard/output')  
+    parser.add_argument('--outdir', dest='outdir', type=str, default='/scratch/funcom/data/outdir')
     parser.add_argument('--challenge', action='store_true', default=False)
     parser.add_argument('--obfuscate', action='store_true', default=False)
     parser.add_argument('--sbt', action='store_true', default=False)

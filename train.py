@@ -122,7 +122,7 @@ if __name__ == '__main__':
     parser.add_argument('--model-type', dest='modeltype', type=str, default='vanilla')
     parser.add_argument('--with-multigpu', dest='multigpu', action='store_true', default=False)
     parser.add_argument('--data', dest='dataprep', type=str, default='/scratch/funcom/data/standard')
-    parser.add_argument('--outdir', dest='outdir', type=str, default='/scratch/funcom/outdir/models')
+    parser.add_argument('--outdir', dest='outdir', type=str, default='/scratch/funcom/data/outdir/models')
     dset = parser.add_mutually_exclusive_group()
     dset.add_argument('--challenge', dest='challenge', action='store_true', default=False)
     dset.add_argument('--obfuscate', dest='obf', action='store_true', default=False)
