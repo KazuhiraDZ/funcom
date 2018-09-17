@@ -120,6 +120,7 @@ if __name__ == '__main__':
     parser.add_argument('--with-multigpu', dest='multigpu', action='store_true', default=False)
     parser.add_argument('--data', dest='dataprep', type=str, default='/scratch/funcom/data/standard')
     parser.add_argument('--outdir', dest='outdir', type=str, default='/scratch/funcom/data/outdir/models')
+    parser.add_argument('--dtype', type=str, default='float32')
     dset = parser.add_mutually_exclusive_group()
     dset.add_argument('--challenge', dest='challenge', action='store_true', default=False)
     dset.add_argument('--obfuscate', dest='obf', action='store_true', default=False)
@@ -146,6 +147,8 @@ if __name__ == '__main__':
     sig = args.sig
     stand = args.stand
     septs = args.septs
+
+    K.set_floatx(args.dtype)
 
     sys.path.append(dataprep)
     import tokenizer
@@ -180,15 +183,15 @@ if __name__ == '__main__':
         modelname = 'standard_'+modeltype
 
     elif septs:
-        dataprep = '/scratch/funcom/data/separate_text_struct'
+        dataprep = '/scratch/funcom/data/standard_filecontext'
         modelname = 'septs_'+modeltype
 
     prep('loading tokenizers... ')
     if septs:
         tdatstok = pickle.load(open('%s/tdats.tok' % (dataprep), 'rb'), encoding='UTF-8')
         sdatstok = pickle.load(open('%s/sdats.tok' % (dataprep), 'rb'), encoding='UTF-8')
-    else:
-        datstok = pickle.load(open('%s/dats.tok' % (dataprep), 'rb'), encoding='UTF-8')
+    #else:
+    datstok = pickle.load(open('%s/tdats.tok' % (dataprep), 'rb'), encoding='UTF-8')
         
     comstok = pickle.load(open('%s/coms.tok' % (dataprep), 'rb'), encoding='UTF-8')
     if not sbt:
@@ -229,8 +232,12 @@ if __name__ == '__main__':
     config['datvocabsize'] = datvocabsize
     config['comvocabsize'] = comvocabsize
     if not sbt:
-     config['smlvocabsize'] = smlvocabsize
-    config['datlen'] = len(list(seqdata['dttrain'].values())[0])
+        config['smlvocabsize'] = smlvocabsize
+    #if septs:
+    config['tdatlen'] = len(list(seqdata['dttrain'].values())[0])
+    config['sdatlen'] = len(list(seqdata['dstrain'].values())[0])
+    #config['datlen'] = len(list(seqdata['dttrain'].values())[0])
+
     config['comlen'] = len(list(seqdata['ctrain'].values())[0])
     if not sbt:
         config['smllen'] = len(list(seqdata['strain'].values())[0])
@@ -257,7 +264,7 @@ if __name__ == '__main__':
     callbacks = [ checkpoint ]
 
     try:
-        model.fit_generator(gen, steps_per_epoch=steps, epochs=epochs, verbose=1, max_queue_size=10, callbacks=callbacks, validation_data=valgen, validation_steps=valsteps)# 
+        model.fit_generator(gen, steps_per_epoch=steps, epochs=epochs, verbose=1, max_queue_size=2, callbacks=callbacks, validation_data=valgen, validation_steps=valsteps)# 
     except Exception as ex:
         print(ex)
         traceback.print_exc(file=sys.stdout)

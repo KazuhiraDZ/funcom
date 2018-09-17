@@ -65,6 +65,9 @@ class batch_gen(keras.utils.Sequence):
         self.batch_size = batch_size
         self.seqdata = seqdata
         self.mt = mt
+        #if num_inputs == 4:
+        #    self.allfids = list(seqdata['dt%s' % (tt)].keys())
+        #else:
         self.allfids = list(seqdata['dt%s' % (tt)].keys())
         self.num_inputs = num_inputs
         random.shuffle(self.allfids)
@@ -93,7 +96,10 @@ class batch_gen(keras.utils.Sequence):
             return self.divideseqs(batchfids, self.seqdata, self.comvocabsize, self.tt)
 
     def __len__(self):
+        #if self.num_inputs == 4:
         return int(np.ceil(len(list(self.seqdata['dt%s' % (self.tt)]))/self.batch_size))
+        #else:
+        #    return int(np.ceil(len(list(self.seqdata['d%s' % (self.tt)]))/self.batch_size))
 
     def on_epoch_end(self):
         random.shuffle(self.allfids)
@@ -150,7 +156,7 @@ class batch_gen(keras.utils.Sequence):
         c = 0
         for fid in batchfids: #seqdata['coms_%s_seqs' % (tt)].keys():
 
-            wdatseq = seqdata['d%s' % (tt)][fid]
+            wdatseq = seqdata['dt%s' % (tt)][fid]
             wcomseq = seqdata['c%s' % (tt)][fid]
             wsmlseq = seqdata['s%s' % (tt)][fid]
             # if(len(wdatseq)<100):

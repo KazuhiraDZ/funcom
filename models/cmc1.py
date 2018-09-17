@@ -11,24 +11,26 @@ class Cmc1Model:
         self.datvocabsize = config['datvocabsize']
         self.comvocabsize = config['comvocabsize']
         self.smlvocabsize = config['smlvocabsize']
-        self.datlen = config['datlen']
+        self.tdatlen = config['tdatlen']
+        self.sdatlen = config['sdatlen']
         self.comlen = config['comlen']
         self.smllen = config['smllen']
 
         self.embdims = 100
         self.smldims = 10
         self.recdims = 256
+        self.tdddims = 256
         self.num_input = 4
         
     def create_model(self):
         
-        tdat_input = Input(shape=(self.datlen,))
-        sdat_input = Input(shape=(self.datlen,))
+        tdat_input = Input(shape=(self.tdatlen,))
+        sdat_input = Input(shape=(self.sdatlen,))
         com_input = Input(shape=(self.comlen,))
         sml_input = Input(shape=(self.smllen,))
         
         tde = Embedding(output_dim=self.embdims, input_dim=self.datvocabsize, mask_zero=False)(tdat_input)
-        sde = Embedding(output_dim=self.smldims, input_dim=self.smlvocabsize, mask_zero=False)(sdat_input)
+        sde = Embedding(output_dim=self.embdims, input_dim=self.smlvocabsize, mask_zero=False)(sdat_input)
         se = Embedding(output_dim=self.smldims, input_dim=self.smlvocabsize, mask_zero=False)(sml_input)
 
         #se_emb = Conv1D(10, 3)(se)
@@ -66,7 +68,7 @@ class Cmc1Model:
 
         context = concatenate([scontext, tcontext, decout, ast_context])
 
-        out = TimeDistributed(Dense(self.recdims, activation="relu"))(context)
+        out = TimeDistributed(Dense(self.tdddims, activation="relu"))(context)
 
         out = Flatten()(out)
         #out = concatenate([seout, out])
@@ -75,5 +77,5 @@ class Cmc1Model:
         
         model = Model(inputs=[tdat_input, sdat_input, com_input, sml_input], outputs=out)
 
-        model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+        model.compile(loss='categorical_crossentropy', optimizer='adamax', metrics=['accuracy'])
         return self.num_input, model

@@ -56,6 +56,27 @@ def gendescr_3inp(model, data, comstok, comlen, batchsize, strat='greedy'):
 
     return final_data
 
+def gendescr_4inp(model, data, comstok, comlen, batchsize, strat='greedy'):
+    # right now, only greedy search is supported...
+
+    tdats, sdats, coms, smls = list(zip(*data.values()))
+    tdats = np.array(tdats)
+    sdats = np.array(sdats)
+    coms = np.array(coms)
+    smls = np.array(smls)
+
+    for i in range(1, comlen):
+        results = model.predict([tdats, sdats, coms, smls], batch_size=batchsize)
+        for c, s in enumerate(results):
+            coms[c][i] = np.argmax(s)
+
+    final_data = {}
+    for fid, com in zip(data.keys(), coms):
+        final_data[fid] = seq2sent(com, comstok)
+
+    return final_data
+
+
 def gendescr_2inp(model, data, comstok, comlen, batchsize, strat='greedy'):
     # right now, only greedy search is supported...
     
@@ -161,18 +182,18 @@ if __name__ == '__main__':
 
     if challenge:
         v = np.zeros(100)
-        for key, val in seqdata['dtrain'].items():
-            seqdata['dtrain'][key] = v
+        for key, val in seqdata['dttrain'].items():
+            seqdata['dttrain'][key] = v
 
-        for key, val in seqdata['dval'].items():
-            seqdata['dval'][key] = v
+        for key, val in seqdata['dtval'].items():
+            seqdata['dtval'][key] = v
     
-        for key, val in seqdata['dtest'].items():
-            seqdata['dtest'][key] = v
+        for key, val in seqdata['dttest'].items():
+            seqdata['dttest'][key] = v
 
-        print(seqdata['dtrain'][list(seqdata['dtrain'].keys())[0]])
-        print(seqdata['dval'][list(seqdata['dval'].keys())[0]])
-        print(seqdata['dtest'][list(seqdata['dtest'].keys())[0]])
+        print(seqdata['dttrain'][list(seqdata['dttrain'].keys())[0]])
+        print(seqdata['dtval'][list(seqdata['dtval'].keys())[0]])
+        print(seqdata['dttest'][list(seqdata['dttest'].keys())[0]])
 
 
 
@@ -182,7 +203,7 @@ if __name__ == '__main__':
     if not sbt:
         smlvocabsize = smltok.vocab_size
 
-    datlen = len(seqdata['dtest'][list(seqdata['dtest'].keys())[0]])
+    datlen = len(seqdata['dttest'][list(seqdata['dttest'].keys())[0]])
     comlen = len(seqdata['ctest'][list(seqdata['ctest'].keys())[0]])
     if not sbt:  
         smllen = len(seqdata['stest'][list(seqdata['stest'].keys())[0]])
@@ -208,17 +229,22 @@ if __name__ == '__main__':
         batch = {}
         st = timer()
         for fid in fid_set:
-            dat = seqdata['dtest'][fid]
+            dat = seqdata['dttest'][fid]
             if not sbt:
                 sml = seqdata['stest'][fid]
              # should be fixed size anyway
 
-            if num_inputs == 3:
+            if num_inputs == 4:
+                sdat = seqdata['dstest'][fid]
+                batch[fid] = np.asarray([dat, sdat, comstart, sml])
+            elif num_inputs == 3:
                 batch[fid] = np.asarray([dat, comstart, sml])
             else:
                 batch[fid] = np.asarray([dat, comstart])
 
-        if num_inputs == 3:
+        if num_inputs == 4:
+            batch_results = gendescr_4inp(model, batch, comstok, comlen, batchsize, strat='greedy')
+        elif num_inputs == 3:
             batch_results = gendescr_3inp(model, batch, comstok, comlen, batchsize, strat='greedy')
         else:
             batch_results = gendescr_2inp(model, batch, comstok, comlen, batchsize, strat='greedy')
