@@ -130,6 +130,7 @@ if __name__ == '__main__':
     dset.add_argument('--sig', dest='sig', action='store_true', default=False)
     dset.add_argument('--stand', dest='stand', action='store_true', default=False)
     dset.add_argument('--septs', dest='septs', action='store_true', default=False)
+    dset.add_argument('--3d-sdats', dest='threed', action='store_true', default=False)
     args = parser.parse_args()
     
     outdir = args.outdir
@@ -147,6 +148,7 @@ if __name__ == '__main__':
     sig = args.sig
     stand = args.stand
     septs = args.septs
+    threed = args.threed
 
     K.set_floatx(args.dtype)
 
@@ -182,9 +184,12 @@ if __name__ == '__main__':
         dataprep = '../data/standard'
         modelname = 'standard_'+modeltype
 
-    elif septs:
-        dataprep = '/scratch/funcom/data/standard_filecontext'
-        modelname = 'septs_'+modeltype
+    #elif septs:
+    #    dataprep = '/scratch/funcom/data/standard_filecontext'
+    #    modelname = 'septs_'+modeltype
+
+    elif threed:
+        modelname = 'threed_'+modeltype
 
     prep('loading tokenizers... ')
     if septs:
@@ -235,7 +240,7 @@ if __name__ == '__main__':
         config['smlvocabsize'] = smlvocabsize
     #if septs:
     config['tdatlen'] = len(list(seqdata['dttrain'].values())[0])
-    config['sdatlen'] = len(list(seqdata['dstrain'].values())[0])
+    config['sdatlen'] = seqdata['config']['sdatlen'] #len(list(seqdata['dstrain'].values())[0])
     #config['datlen'] = len(list(seqdata['dttrain'].values())[0])
 
     config['comlen'] = len(list(seqdata['ctrain'].values())[0])
@@ -245,16 +250,16 @@ if __name__ == '__main__':
     config['batch_size'] = batch_size
 
     prep('creating model... ')
-    num_inputs, model = create_model(modeltype, config)
+    config, model = create_model(modeltype, config)
     drop()
 
     print(model.summary())
     
 
-    gen = batch_gen(seqdata, comvocabsize, 'train', modeltype, num_inputs, batch_size=batch_size)
+    gen = batch_gen(seqdata, comvocabsize, 'train', modeltype, config['num_input'], config, batch_size=batch_size, threed=threed)
     #checkpoint = ModelCheckpoint(outdir+'/'+modeltype+'_E{epoch:02d}_TA{acc:.2f}_VA{val_acc:.2f}_VB{val_bleu:}.h5', monitor='val_loss')
-    checkpoint = ModelCheckpoint(outdir+'/'+modelname+'_E{epoch:02d}_TA{acc:.2f}_VA{val_acc:.2f}.h5', monitor='val_loss')
-    valgen = batch_gen(seqdata, comvocabsize, 'val', modeltype, num_inputs, batch_size=batch_size)
+    checkpoint = ModelCheckpoint(outdir+'/'+modelname+'_E{epoch:02d}.h5')
+    valgen = batch_gen(seqdata, comvocabsize, 'val', modeltype, config['num_input'], config, batch_size=batch_size, threed=threed)
 
     # If you want it to calculate BLEU Score after each epoch use callback_valgen and test_cb
     #####

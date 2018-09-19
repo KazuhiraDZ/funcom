@@ -59,7 +59,7 @@ def seq2sent(seq, tokenizer):
     return(' '.join(sent))
             
 class batch_gen(keras.utils.Sequence):
-    def __init__(self, seqdata, comvocabsize, tt, mt, num_inputs, batch_size=32):
+    def __init__(self, seqdata, comvocabsize, tt, mt, num_inputs, config, batch_size=32, threed=False):
         self.comvocabsize = comvocabsize
         self.tt = tt
         self.batch_size = batch_size
@@ -70,6 +70,8 @@ class batch_gen(keras.utils.Sequence):
         #else:
         self.allfids = list(seqdata['dt%s' % (tt)].keys())
         self.num_inputs = num_inputs
+        self.threed = threed
+        self.config = config
         random.shuffle(self.allfids)
 
     def __getitem__(self, idx):
@@ -88,6 +90,8 @@ class batch_gen(keras.utils.Sequence):
 
         if self.num_inputs == 3:
             return self.divideseqs_ast(batchfids, self.seqdata, self.comvocabsize, self.tt)
+        elif self.num_inputs == 4 and self.threed:
+            return self.divideseqs_ast_threed(batchfids, self.seqdata, self.comvocabsize, self.tt)
         elif self.num_inputs == 4:
             return self.divideseqs_ast_septs(batchfids, self.seqdata, self.comvocabsize, self.tt)
         elif self.mt == 'crazy':
@@ -249,6 +253,80 @@ class batch_gen(keras.utils.Sequence):
         comouts = np.asarray(comouts)
 
         return [[tdatseqs, sdatseqs, comseqs, smlseqs], comouts]
+
+    def divideseqs_ast_threed(self, batchfids, seqdata, comvocabsize, tt):
+        import keras.utils
+        
+        tdatseqs = list()
+        sdatseqs = list()
+        comseqs = list()
+        smlseqs = list()
+        comouts = list()
+
+        limit = -1
+        c = 0
+        for fid in batchfids: #seqdata['coms_%s_seqs' % (tt)].keys():
+
+            wtdatseq = seqdata['dt%s' % (tt)][fid]
+            wsdatseq = seqdata['ds%s' % (tt)][fid]
+            wcomseq = seqdata['c%s' % (tt)][fid]
+            wsmlseq = seqdata['s%s' % (tt)][fid]
+            # if(len(wdatseq)<100):
+            #     continue
+
+            # TODO the following magic should really be done in preprocessing
+            #print('1 wsdatseq shape', wsdatseq.shape)
+            newlen = self.config['sdatlen']-len(wsdatseq)
+            if newlen < 0:
+                newlen = 0
+            #print('fid', fid)
+            #print('newlen', newlen)
+            wsdatseq = wsdatseq.tolist()
+            for k in range(newlen):
+                wsdatseq.append(np.zeros(self.config['tdatlen']))
+                #wsdatseq = np.append(wsdatseq, np.zeros(100), axis=0)
+            wsdatseq = np.asarray(wsdatseq)
+            #print('2 wsdatseq shape', wsdatseq.shape)
+            wsdatseq = wsdatseq[:self.config['sdatlen'],:,None]
+            #print('3 wsdatseq shape', wsdatseq.shape)
+
+            for i in range(0, len(wcomseq)):
+                tdatseqs.append(wtdatseq)
+                sdatseqs.append(wsdatseq)
+                smlseqs.append(wsmlseq)
+                # slice up whole comseq into seen sequence and current sequence
+                # [a b c d] => [] [a], [a] [b], [a b] [c], [a b c] [d], ...
+                comseq = wcomseq[0:i]
+                comout = wcomseq[i]
+                comout = keras.utils.to_categorical(comout, num_classes=comvocabsize)
+                #print(comout)
+
+                # extend length of comseq to expected sequence size
+                # the model will be expecting all input vectors to have the same size
+                for j in range(0, len(wcomseq)):
+                    try:
+                        comseq[j]
+                    except IndexError as ex:
+                        comseq = np.append(comseq, 0)
+                #comseq = [sum(x) for x in zip(comseq, [0] * len(wcomseq))]
+
+                comseqs.append(comseq)
+                comouts.append(np.asarray(comout))
+
+            c += 1
+            if(c == limit):
+                break
+
+        tdatseqs = np.asarray(tdatseqs)
+        sdatseqs = np.asarray(sdatseqs)
+        smlseqs = np.asarray(smlseqs)
+        comseqs = np.asarray(comseqs)
+        comouts = np.asarray(comouts)
+
+        if self.config['num_output'] == 2:
+            return [[tdatseqs, sdatseqs, comseqs, smlseqs], [comouts, comouts]]
+        else:
+            return [[tdatseqs, sdatseqs, comseqs, smlseqs], comouts]
 
 class batch_gen_train_bleu(keras.utils.Sequence):
     def __init__(self, seqdata, comvocabsize, tt, mt, num_input, batch_size=32):

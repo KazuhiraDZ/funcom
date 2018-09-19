@@ -30,7 +30,7 @@ class Cmc1Model:
         sml_input = Input(shape=(self.smllen,))
         
         tde = Embedding(output_dim=self.embdims, input_dim=self.datvocabsize, mask_zero=False)(tdat_input)
-        sde = Embedding(output_dim=self.embdims, input_dim=self.smlvocabsize, mask_zero=False)(sdat_input)
+        sde = Embedding(output_dim=self.embdims, input_dim=self.datvocabsize, mask_zero=False)(sdat_input)
         se = Embedding(output_dim=self.smldims, input_dim=self.smlvocabsize, mask_zero=False)(sml_input)
 
         #se_emb = Conv1D(10, 3)(se)
