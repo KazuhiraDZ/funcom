@@ -6,6 +6,8 @@ import keras.utils
 import tensorflow as tf
 from keras import metrics
 
+# This is a generic attentional seq2seq model.
+
 # I write this guide with much thanks to:
 # https://wanasit.github.io/attention-based-sequence-to-sequence-in-keras.html
 # https://arxiv.org/abs/1508.04025
@@ -22,7 +24,7 @@ def top5(y1, y2):
 class AttentionGRUModel:
     def __init__(self, config):
         self.config = config
-        self.datvocabsize = config['tdatvocabsize']
+        self.tdatvocabsize = config['tdatvocabsize']
         self.comvocabsize = config['comvocabsize']
         self.datlen = config['tdatlen']
         self.comlen = config['comlen']
@@ -46,7 +48,7 @@ class AttentionGRUModel:
         # a uni-directional GRU.  We have to disable masking here, since not all following layers
         # support masking.  Hopefully the network will learn to ignore zeros anyway.
         
-        ee = Embedding(output_dim=self.embdims, input_dim=self.datvocabsize, mask_zero=False)(dat_input)
+        ee = Embedding(output_dim=self.embdims, input_dim=self.tdatvocabsize, mask_zero=False)(dat_input)
 
         # The regular GRU can be swapped for the CuDNNGRU if desired.  The CuDNNGRU seems to be
         # around 50% faster in this model, but we are constained to GPU training /and testing/.
@@ -56,7 +58,7 @@ class AttentionGRUModel:
         # state /at every cell/ instead just the final state.  We need the state at every cell for the
         # attention mechanism later.
         
-        # The embedding will output a shape of (batch_size, datvocabsize, embdims).  What this means
+        # The embedding will output a shape of (batch_size, tdatvocabsize, embdims).  What this means
         # is that for every batch, each word in the sequence has one vector of length embdims.  For
         # example, (300, 100, 100) means that for each of 300 examples in a batch, there are 100 words.
         # and each word is represented by a 100 length embedding vector.
@@ -67,7 +69,7 @@ class AttentionGRUModel:
         
         # Tensor encout would normally have shape (batch_size, recdims), a recdims-length vector
         # representation of every input in the batch.  However, since we have return_sequences enabled,
-        # encout has the shape (batch_size, datvocabsize, recdims), which is the recdims-length
+        # encout has the shape (batch_size, tdatvocabsize, recdims), which is the recdims-length
         # vector at every time-step.  That is, the recdims-length vector at every word in the sequence.
         # So we see the status of the output vector as it changes with each word in the sequence.
         # We also have return_state enabled, which just means that we get state_h, the recdims vector
@@ -133,13 +135,13 @@ class AttentionGRUModel:
         attn = dot([decout, encout], axes=[2, 2])
         attn = Activation('softmax')(attn)
 
-        # To be 100% clear, the output shape of attn is (batch_size, comvocabsize, datvocabsize).
+        # To be 100% clear, the output shape of attn is (batch_size, comvocabsize, tdatvocabsize).
         
         # But what do we do with the attention vectors, now that we have them?  Answer is that we
         # need to scale the encoder vectors by the attention vectors.  This is how we 'pay 
         # attention' to particular areas of input for specific outputs.  The following line
         # takes attn, with shape (batch_size, 13, 100), and takes the dot product with
-        # encout (batch_size, 100, 256).  Remember that the encoder has datvocabsize, 100 in this
+        # encout (batch_size, 100, 256).  Remember that the encoder has tdatvocabsize, 100 in this
         # example, elements since it takes a sequence of 100 words.  Axis 1 of this tensor means
         # 'for each element of the input sequence'.
         

@@ -209,15 +209,14 @@ if __name__ == '__main__':
 
     steps = int(len(seqdata['ctrain'])/batch_size)+1
     valsteps = int(len(seqdata['cval'])/100)+1
-    if septs:
-        datvocabsize = tdatstok.vocab_size
-    else:
-        datvocabsize = datstok.vocab_size
+    
+    tdatvocabsize = tdatstok.vocab_size
     comvocabsize = comstok.vocab_size
+    
     if not sbt:
         smlvocabsize = smltok.vocab_size
 
-    print('datvocabsize %s' % (datvocabsize))
+    print('tdatvocabsize %s' % (tdatvocabsize))
     print('comvocabsize %s' % (comvocabsize))
     if not sbt:
         print('smlvocabsize %s' % (smlvocabsize))
@@ -234,14 +233,14 @@ if __name__ == '__main__':
     print('------------------------------------------')
 
     config = dict()
-    config['datvocabsize'] = datvocabsize
+    config['tdatvocabsize'] = tdatvocabsize
     config['comvocabsize'] = comvocabsize
     if not sbt:
         config['smlvocabsize'] = smlvocabsize
-    #if septs:
+
     config['tdatlen'] = len(list(seqdata['dttrain'].values())[0])
-    config['sdatlen'] = seqdata['config']['sdatlen'] #len(list(seqdata['dstrain'].values())[0])
-    #config['datlen'] = len(list(seqdata['dttrain'].values())[0])
+    config['sdatlen'] = seqdata['config']['sdatlen']
+
 
     config['comlen'] = len(list(seqdata['ctrain'].values())[0])
     if not sbt:

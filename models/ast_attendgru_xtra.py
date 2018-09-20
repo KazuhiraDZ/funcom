@@ -6,9 +6,7 @@ import keras
 import keras.utils
 import tensorflow as tf
 
-# I write this guide with much thanks to:
-# https://wanasit.github.io/attention-based-sequence-to-sequence-in-keras.html
-# https://arxiv.org/abs/1508.04025
+# This is the ICSE'19 submission version.
 
 class AstAttentionGRUModel:
     def __init__(self, config):
@@ -18,12 +16,12 @@ class AstAttentionGRUModel:
         self.datlen = config['datlen']
         self.comlen = config['comlen']
         self.smllen = config['smllen']
-
         
         self.embdims = 100
         self.smldims = 10
         self.recdims = 256
         self.num_input = 3
+        
     def create_model(self):
         
         dat_input = Input(shape=(self.datlen,))
