@@ -31,9 +31,10 @@ class AttentionGRUModel:
         
         self.embdims = 100
         self.recdims = 256
-        self.num_input = 2
-        #self.multigpu = multigpu
-    
+
+        self.config['num_input'] = 2
+        self.config['num_output'] = 1
+
     def create_model(self):
 
         # The first two lines here are the input.  We assume a fixed-size input, padded to 
