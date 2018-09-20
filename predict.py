@@ -37,16 +37,34 @@ def top3(y1, y2):
 def top5(y1, y2):
     return metrics.top_k_categorical_accuracy(y1, y2, k=5)
 
+def gendescr_2inp(model, data, comstok, comlen, batchsize, strat='greedy'):
+    # right now, only greedy search is supported...
+    
+    tdats, coms = list(zip(*data.values()))
+    tdats = np.array(tdats)
+    coms = np.array(coms)
+
+    for i in range(1, comlen):
+        results = model.predict([tdats, coms], batch_size=batchsize)
+        for c, s in enumerate(results):
+            coms[c][i] = np.argmax(s)
+
+    final_data = {}
+    for fid, com in zip(data.keys(), coms):
+        final_data[fid] = seq2sent(com, comstok)
+
+    return final_data
+
 def gendescr_3inp(model, data, comstok, comlen, batchsize, strat='greedy'):
     # right now, only greedy search is supported...
     
-    dats, coms, smls = list(zip(*data.values()))
-    dats = np.array(dats)
+    tdats, coms, smls = list(zip(*data.values()))
+    tdats = np.array(tdats)
     coms = np.array(coms)
     smls = np.array(smls)
 
     for i in range(1, comlen):
-        results = model.predict([dats, coms, smls], batch_size=batchsize)
+        results = model.predict([tdats, coms, smls], batch_size=batchsize)
         for c, s in enumerate(results):
             coms[c][i] = np.argmax(s)
 
@@ -76,26 +94,6 @@ def gendescr_4inp(model, data, comstok, comlen, batchsize, strat='greedy'):
 
     return final_data
 
-
-def gendescr_2inp(model, data, comstok, comlen, batchsize, strat='greedy'):
-    # right now, only greedy search is supported...
-    
-    dats, coms = list(zip(*data.values()))
-    dats = np.array(dats)
-    coms = np.array(coms)
-
-    for i in range(1, comlen):
-        results = model.predict([dats, coms], batch_size=batchsize)
-        for c, s in enumerate(results):
-            coms[c][i] = np.argmax(s)
-
-    final_data = {}
-    for fid, com in zip(data.keys(), coms):
-        final_data[fid] = seq2sent(com, comstok)
-
-    return final_data
-
-
 def load_model_from_weights(modelpath, modeltype, datvocabsize, comvocabsize, smlvocabsize, datlen, comlen, smllen):
     config = dict()
     config['datvocabsize'] = datvocabsize
@@ -116,15 +114,14 @@ if __name__ == '__main__':
     parser.add_argument('--num-procs', dest='numprocs', type=int, default='4')
     parser.add_argument('--gpu', dest='gpu', type=str, default='')
     parser.add_argument('--data', dest='dataprep', type=str, default='/scratch/funcom/data/standard')
-    parser.add_argument('--outdir', dest='outdir', type=str, default='/scratch/funcom/data/outdir/predictions')
+    parser.add_argument('--outdir', dest='outdir', type=str, default='/scratch/funcom/data/outdir')
     parser.add_argument('--batch-size', dest='batchsize', type=int, default=200)
     parser.add_argument('--num-inputs', dest='numinputs', type=int, default=3)
     parser.add_argument('--model-type', dest='modeltype', type=str, default=None)
     parser.add_argument('--outfile', dest='outfile', type=str, default=None)
-    parser.add_argument('--challenge', action='store_true', default=False)
-    parser.add_argument('--obfuscate', action='store_true', default=False)
-    parser.add_argument('--sbt', action='store_true', default=False)
-    parser.add_argument('--sig', action='store_true', default=False)
+    parser.add_argument('--zero-dats', dest='zerodats', action='store_true', default=False)
+    parser.add_argument('--dtype', dest='dtype', type=str, default='float32')
+    parser.add_argument('--tf-loglevel', dest='tf_loglevel', type=str, default='3')
 
     args = parser.parse_args()
     
@@ -137,50 +134,29 @@ if __name__ == '__main__':
     num_inputs = args.numinputs
     modeltype = args.modeltype
     outfile = args.outfile
-    challenge = args.challenge
-    obf = args.obfuscate
-    sbt = args.sbt
-    sig = args.sig
-    # if outfile is None:
-    #     outfile = modeltype
+    zerodats = args.zerodats
 
     if outfile is None:
         outfile = modelfile.split('/')[-1]
 
-    if challenge:
-        dataprep = '../data/standard'
-
-    if obf:
-        dataprep = '../data/obfuscation'
-
-    if sbt:
-        dataprep = '../data/sbt'
-
-    if sig:
-        dataprep = '../data/sig_only'
-
+    K.set_floatx(args.dtype)
     os.environ['CUDA_VISIBLE_DEVICES'] = gpu
-    os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+    os.environ['TF_CPP_MIN_LOG_LEVEL'] = args.tf_loglevel
 
     sys.path.append(dataprep)
     import tokenizer
 
     prep('loading tokenizers... ')
-    datstok = pickle.load(open('%s/dats.tok' % (dataprep), 'rb'), encoding='UTF-8')
+    tdatstok = pickle.load(open('%s/tdats.tok' % (dataprep), 'rb'), encoding='UTF-8')
     comstok = pickle.load(open('%s/coms.tok' % (dataprep), 'rb'), encoding='UTF-8')
-    if not sbt:
-        smltok = pickle.load(open('%s/smls.tok' % (dataprep), 'rb'), encoding='UTF-8')
+    smltok = pickle.load(open('%s/smls.tok' % (dataprep), 'rb'), encoding='UTF-8')
     drop()
-        
-
-    #datstok.set_vocab_size(1000)
-    #comstok.set_vocab_size(300)
 
     prep('loading sequences... ')
     seqdata = pickle.load(open('%s/dataset.pkl' % (dataprep), 'rb'))
     drop()
 
-    if challenge:
+    if zerodats:
         v = np.zeros(100)
         for key, val in seqdata['dttrain'].items():
             seqdata['dttrain'][key] = v
@@ -191,40 +167,29 @@ if __name__ == '__main__':
         for key, val in seqdata['dttest'].items():
             seqdata['dttest'][key] = v
 
-        print(seqdata['dttrain'][list(seqdata['dttrain'].keys())[0]])
-        print(seqdata['dtval'][list(seqdata['dtval'].keys())[0]])
-        print(seqdata['dttest'][list(seqdata['dttest'].keys())[0]])
-
-
-
     allfids = list(seqdata['ctest'].keys())
-    datvocabsize = datstok.vocab_size
+    datvocabsize = tdatstok.vocab_size
     comvocabsize = comstok.vocab_size
     if not sbt:
         smlvocabsize = smltok.vocab_size
 
     datlen = len(seqdata['dttest'][list(seqdata['dttest'].keys())[0]])
     comlen = len(seqdata['ctest'][list(seqdata['ctest'].keys())[0]])
-    if not sbt:  
-        smllen = len(seqdata['stest'][list(seqdata['stest'].keys())[0]])
+    smllen = len(seqdata['stest'][list(seqdata['stest'].keys())[0]])
 
     prep('loading model...')
-    #try:
     model = keras.models.load_model(modelfile, custom_objects={'top2': top2, 'top3': top3, 'top5':top5})
-    #except:
-        #print("NO")
-        #exit()
-        #model = load_model_from_weights(modelfile, modeltype, datvocabsize, comvocabsize, smlvocabsize, datlen, comlen, smllen)
     drop()
 
     comstart = np.zeros(comlen)
     st = comstok.w2i['<s>']
     comstart[0] = st
-    outf = open(outdir+"/predict-{}.txt".format(outfile), 'w')
-    print("writing to file - "+outdir+"/predict-{}.txt".format(outfile))
+    outfn = outdir+"/predictions/predict-{}.txt".format(outfile)
+    outf = open(outfn, 'w')
+    print("writing to file: " + outfn)
     batch_sets = [allfids[i:i+batchsize] for i in range(0, len(allfids), batchsize)]
  
-    prep("Computing Predictions...\n")
+    prep("computing predictions...\n")
     for c, fid_set in enumerate(batch_sets):
         batch = {}
         st = timer()
@@ -234,13 +199,16 @@ if __name__ == '__main__':
                 sml = seqdata['stest'][fid]
              # should be fixed size anyway
 
-            if num_inputs == 4:
-                sdat = seqdata['dstest'][fid]
-                batch[fid] = np.asarray([dat, sdat, comstart, sml])
+            if num_inputs == 2:
+                batch[fid] = np.asarray([dat, comstart])
             elif num_inputs == 3:
                 batch[fid] = np.asarray([dat, comstart, sml])
+            elif num_inputs == 4:
+                sdat = seqdata['dstest'][fid]
+                batch[fid] = np.asarray([dat, sdat, comstart, sml])
             else:
-                batch[fid] = np.asarray([dat, comstart])
+                print('error: invalid number of inputs specified')
+                sys.exit()
 
         if num_inputs == 4:
             batch_results = gendescr_4inp(model, batch, comstok, comlen, batchsize, strat='greedy')
@@ -257,51 +225,3 @@ if __name__ == '__main__':
 
     outf.close()        
     drop()
-
-
-
-
-
-
-
-
-
-
-    """
-    r = random.randint(0, numprocs)
-    if modeltype == 'ast-attendgru' or modeltype == 'pretrained':
-        wrkunits[r].append((fid, dat, comlen, sml))
-    else:
-        wrkunits[r].append((fid, dat, comlen))
-
-    if(c > 0 and c % 1000 == 0):
-        
-        for rets in pool.map(gendescrs, wrkunits.values()):
-            #for rets in allrets:
-                for ret in rets:
-                    (fid, pred) = ret
-                    predsfile.write('%s\t%s\n' % (fid, pred))
-                    predsfile.flush()
-        
-        wrkunits = collections.defaultdict(list)
-        
-        et = timer()
-        statusout('%s/%ss, ' % (c, round(et-st, 1)))
-        st = timer()
-        
-    predsfile.close()
-    drop()
-
-    #batch_size = 1800
-    #steps = int(len(seqdata['coms_test_seqs'])/batch_size)+1
-
-    #gen = createbatchgen(seqdata, comvocabsize, 'test', batch_size=batch_size)
-    #try:
-    #    score = model.evaluate_generator(gen, steps=steps, verbose=1, max_queue_size=2)
-    #    print('loss: %s, accuracy: %s' % (score[0], score[1]))
-    #except Exception as ex:
-    #    print(ex)
-    #    traceback.print_exc(file=sys.stdout)
-
-
-    """

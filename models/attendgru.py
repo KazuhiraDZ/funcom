@@ -23,6 +23,10 @@ def top5(y1, y2):
 
 class AttentionGRUModel:
     def __init__(self, config):
+        
+        # override default tdatlen
+        config['tdatlen'] = 50
+        
         self.config = config
         self.tdatvocabsize = config['tdatvocabsize']
         self.comvocabsize = config['comvocabsize']
@@ -221,6 +225,8 @@ class AttentionGRUModel:
         # the overhead of moving everything back and forth between the GPUs is likely to
         # soak up any advantage we get from parallelizing the arithmetic.
 
+        if self.config['multigpu']:
+            model = keras.utils.multi_gpu_model(model, gpus=2)
 
         model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
         return self.config, model

@@ -8,8 +8,15 @@ import tensorflow as tf
 
 class Cmc3Model:
     def __init__(self, config):
+        
+        # data length in dataset is 20+ functions per file, but we can elect to reduce
+        # that length here, since myutils reads this length when creating the batches
+        config['sdatlen'] = 10
+        
+        config['tdatlen'] = 50
+        
         self.config = config
-        self.datvocabsize = config['datvocabsize']
+        self.tdatvocabsize = config['tdatvocabsize']
         self.comvocabsize = config['comvocabsize']
         self.smlvocabsize = config['smlvocabsize']
         self.tdatlen = config['tdatlen']
@@ -18,16 +25,16 @@ class Cmc3Model:
         self.smllen = config['smllen']
 
         self.config['num_input'] = 4
-        self.config['num_output'] = 2
+        self.config['num_output'] = 1
 
         self.embdims = 100
         self.smldims = 10
         self.recdims = 256
         self.tdddims = 256
-        self.num_input = 4
         
         self.filters = 32
-        self.kern = (1,3)
+        self.kern = (1,5)
+        self.pool = (1,2)
 
     def create_model(self):
         
@@ -36,7 +43,8 @@ class Cmc3Model:
         com_input = Input(shape=(self.comlen,))
         sml_input = Input(shape=(self.smllen,))
         
-        tde = Embedding(output_dim=self.embdims, input_dim=self.datvocabsize, mask_zero=False)(tdat_input)
+        tdel = Embedding(output_dim=self.embdims, input_dim=self.tdatvocabsize, mask_zero=False)
+        tde = tdel(tdat_input)
         #sde = Embedding(output_dim=self.embdims, input_dim=self.smlvocabsize, mask_zero=False)(sdat_input)
         se = Embedding(output_dim=self.smldims, input_dim=self.smlvocabsize, mask_zero=False)(sml_input)
 
@@ -73,16 +81,24 @@ class Cmc3Model:
 
         sdatconv1 = Conv2D(self.filters, self.kern, activation='relu')
         sdatconv1 = sdatconv1(sdat_input)
-        sdatconv1 = MaxPooling2D(pool_size=self.kern)(sdatconv1)
+        sdatconv1 = MaxPooling2D(pool_size=self.pool)(sdatconv1)
 
         #sdatconv2 = Conv2D(self.filters*2, self.kern, activation='relu')
         #sdatconv2 = sdatconv2(sdatconv1)
         #sdatconv2 = MaxPooling2D(pool_size=self.kern)(sdatconv2)
 
         scontext = Flatten()(sdatconv1)
-        scontext = Dense(self.tdddims)(scontext)
-        out2 = Dense(self.comvocabsize, activation="softmax")(scontext)
-        scontext = RepeatVector(self.comlen)(out2)
+        #scontext = Dense(self.tdddims)(scontext)
+        #out2 = Dense(self.comvocabsize, activation="softmax")(scontext)
+        scontext = RepeatVector(self.comlen)(scontext)
+
+        #senc = CuDNNGRU(self.recdims, return_sequences=True)
+        #sencout = senc(sdatconv1, return_sequences=True)
+
+        #sattn = dot([decout, sencout], axes=[2, 2])
+        #sattn = Activation('softmax')(sattn)
+        
+        #scontext = dot([sattn, sencout], axes=[2, 1])
 
         #seout = RepeatVector(self.comlen)(seout)
 
@@ -95,7 +111,11 @@ class Cmc3Model:
         #out = Dense(2048, activation='relu')(out)
         out1 = Dense(self.comvocabsize, activation="softmax", name="final_out")(out)
         
-        model = Model(inputs=[tdat_input, sdat_input, com_input, sml_input], outputs=[out1, out2])
+        model = Model(inputs=[tdat_input, sdat_input, com_input, sml_input], outputs=out1)
+        #model = Model(inputs=[tdat_input, sdat_input, com_input, sml_input], outputs=[out1, out2])
+        
+        if self.config['multigpu']:
+            model = keras.utils.multi_gpu_model(model, gpus=2)
 
         model.compile(loss='categorical_crossentropy', optimizer='adamax', metrics=['accuracy'])
         return self.config, model

@@ -10,25 +10,32 @@ import tensorflow as tf
 
 class AstAttentionGRUModel:
     def __init__(self, config):
-        self.datvocabsize = config['datvocabsize']
+        
+        # override default tdatlen
+        config['tdatlen'] = 50
+        
+        self.config = config
+        self.tdatvocabsize = config['tdatvocabsize']
         self.comvocabsize = config['comvocabsize']
         self.smlvocabsize = config['smlvocabsize']
-        self.datlen = config['datlen']
+        self.tdatlen = config['tdatlen']
         self.comlen = config['comlen']
         self.smllen = config['smllen']
         
         self.embdims = 100
         self.smldims = 10
         self.recdims = 256
-        self.num_input = 3
-        
+
+        self.config['num_input'] = 3
+        self.config['num_output'] = 1
+
     def create_model(self):
         
-        dat_input = Input(shape=(self.datlen,))
+        dat_input = Input(shape=(self.tdatlen,))
         com_input = Input(shape=(self.comlen,))
         sml_input = Input(shape=(self.smllen,))
         
-        ee = Embedding(output_dim=self.embdims, input_dim=self.datvocabsize, mask_zero=False)(dat_input)
+        ee = Embedding(output_dim=self.embdims, input_dim=self.tdatvocabsize, mask_zero=False)(dat_input)
         se = Embedding(output_dim=self.smldims, input_dim=self.smlvocabsize, mask_zero=False)(sml_input)
 
         #se_emb = Conv1D(10, 3)(se)
@@ -70,6 +77,8 @@ class AstAttentionGRUModel:
         
         model = Model(inputs=[dat_input, com_input, sml_input], outputs=out)
 
+        if self.config['multigpu']:
+            model = keras.utils.multi_gpu_model(model, gpus=2)
         
         model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
-        return self.num_input, model
+        return self.config, model
