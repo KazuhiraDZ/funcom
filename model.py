@@ -13,7 +13,7 @@ from models.cmc3 import Cmc3Model as cmc3
 def create_model(modeltype, config):
     mdl = None
 
-    if modeltype == 'attend-gru':
+    if modeltype == 'attendgru':
     	# base attention GRU model based on Nematus architecture
         mdl = AttentionGRUModel(config)
     elif modeltype == 'ast-attendgru':
