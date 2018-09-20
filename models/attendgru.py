@@ -21,9 +21,10 @@ def top5(y1, y2):
 
 class AttentionGRUModel:
     def __init__(self, config):
-        self.datvocabsize = config['datvocabsize']
+        self.config = config
+        self.datvocabsize = config['tdatvocabsize']
         self.comvocabsize = config['comvocabsize']
-        self.datlen = config['datlen']
+        self.datlen = config['tdatlen']
         self.comlen = config['comlen']
         
         self.embdims = 100
@@ -219,4 +220,4 @@ class AttentionGRUModel:
 
 
         model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
-        return self.num_input, model
+        return self.config, model
