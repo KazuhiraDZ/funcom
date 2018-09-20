@@ -122,7 +122,7 @@ class batch_gen(keras.utils.Sequence):
         limit = -1
         c = 0
         for fid in batchfids:
-            wdatseq = seqdata['d%s' % (tt)][fid]
+            wdatseq = seqdata['dt%s' % (tt)][fid]
             wcomseq = seqdata['c%s' % (tt)][fid]
             for i in range(len(wcomseq)):
                 datseqs.append(wdatseq)
