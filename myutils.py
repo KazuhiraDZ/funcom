@@ -116,7 +116,7 @@ class batch_gen(keras.utils.Sequence):
         comouts = list()
 
         for fid in batchfids:
-            input_datseq = seqdata['d%s' % (tt)][fid]
+            input_datseq = seqdata['dt%s' % (tt)][fid]
             input_comseq = seqdata['c%s' % (tt)][fid]
 
         limit = -1
