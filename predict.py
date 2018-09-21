@@ -222,7 +222,7 @@ if __name__ == '__main__':
 
         if num_inputs == 2:
             batch_results = gendescr_2inp(model, batch, comstok, comlen, batchsize, config, strat='greedy')
-        if num_inputs == 3:
+        elif num_inputs == 3:
             batch_results = gendescr_3inp(model, batch, comstok, comlen, batchsize, config, strat='greedy')
         elif num_inputs == 4:
             batch_results = gendescr_4inp(model, batch, comstok, comlen, batchsize, config, strat='greedy')
