@@ -111,7 +111,7 @@ class batch_gen(keras.utils.Sequence):
             wdatseq = seqdata['dt%s' % (tt)][fid]
             wcomseq = seqdata['c%s' % (tt)][fid]
             
-            wtdatseq = wtdatseq[:self.config['tdatlen']]
+            wdatseq = wdatseq[:self.config['tdatlen']]
             
             for i in range(len(wcomseq)):
                 datseqs.append(wdatseq)
