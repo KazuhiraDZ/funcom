@@ -29,11 +29,12 @@ from nltk.translate.bleu_score import corpus_bleu, sentence_bleu
 
 class HistoryCallback(Callback):
     
-    def setCatchExit(self, outdir, modeltype, timestart):
+    def setCatchExit(self, outdir, modeltype, timestart, config):
         self.outdir = outdir
         self.modeltype = modeltype
         self.history = {}
         self.timestart = timestart
+        self.config = config
         
         atexit.register(self.handle_exit)
         signal.signal(signal.SIGTERM, self.handle_exit)
@@ -46,6 +47,11 @@ class HistoryCallback(Callback):
                 histoutfd = open(fn, 'wb')
                 pickle.dump(self.history, histoutfd)
                 print('saved history to: ' + fn)
+                
+                fn = outdir+'/histories/'+self.modeltype+'_conf_'+str(self.timestart)+'.pkl'
+                confoutfd = open(fn, 'wb')
+                pickle.dump(self.config, confoutfd)
+                print('saved config to: ' + fn)
             except Exception as ex:
                 print(ex)
                 traceback.print_exc(file=sys.stdout)
@@ -232,7 +238,7 @@ if __name__ == '__main__':
     #checkpoint = ModelCheckpoint(outdir+'/'+modeltype+'_E{epoch:02d}_TA{acc:.2f}_VA{val_acc:.2f}_VB{val_bleu:}.h5', monitor='val_loss')
     checkpoint = ModelCheckpoint(outdir+'/models/'+modeltype+'_E{epoch:02d}_'+str(timestart)+'.h5')
     savehist = HistoryCallback()
-    savehist.setCatchExit(outdir, modeltype, timestart)
+    savehist.setCatchExit(outdir, modeltype, timestart, config)
     
     valgen = batch_gen(seqdata, 'val', modeltype, config)
 
