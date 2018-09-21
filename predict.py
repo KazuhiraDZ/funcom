@@ -25,6 +25,7 @@ from timeit import default_timer as timer
 from model import create_model
 from myutils import prep, drop, statusout, batch_gen, seq2sent, index2word, init_tf
 import keras
+import keras.backend as K
 
 from models.attendgru import top2, top3, top5
 
