@@ -171,8 +171,7 @@ if __name__ == '__main__':
     allfids = list(seqdata['ctest'].keys())
     datvocabsize = tdatstok.vocab_size
     comvocabsize = comstok.vocab_size
-    if not sbt:
-        smlvocabsize = smltok.vocab_size
+    smlvocabsize = smltok.vocab_size
 
     datlen = len(seqdata['dttest'][list(seqdata['dttest'].keys())[0]])
     comlen = len(seqdata['ctest'][list(seqdata['ctest'].keys())[0]])
@@ -196,8 +195,7 @@ if __name__ == '__main__':
         st = timer()
         for fid in fid_set:
             dat = seqdata['dttest'][fid]
-            if not sbt:
-                sml = seqdata['stest'][fid]
+            sml = seqdata['stest'][fid]
              # should be fixed size anyway
 
             if num_inputs == 2:
