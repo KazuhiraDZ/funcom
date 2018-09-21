@@ -224,7 +224,8 @@ class batch_gen(keras.utils.Sequence):
             #if fid == 20988417:
             #    print(wsdatseq)
             #print(tt, fid, wsdatseq.shape)
-            wsdatseq = wsdatseq[:self.config['sdatlen'],:,None]
+            #wsdatseq = wsdatseq[:self.config['sdatlen'],:,None]
+            wsdatseq = wsdatseq[:self.config['sdatlen'],:]
             #wsdatseq = wsdatseq[:,:,None]
 
             for i in range(0, len(wcomseq)):

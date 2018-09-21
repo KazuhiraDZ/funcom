@@ -39,7 +39,8 @@ class Cmc3Model:
     def create_model(self):
         
         tdat_input = Input(shape=(self.tdatlen,))
-        sdat_input = Input(shape=(self.sdatlen, self.tdatlen, 1))
+        #sdat_input = Input(shape=(self.sdatlen, self.tdatlen, 1))
+        sdat_input = Input(shape=(self.sdatlen, self.tdatlen))
         com_input = Input(shape=(self.comlen,))
         sml_input = Input(shape=(self.smllen,))
         
@@ -79,15 +80,23 @@ class Cmc3Model:
         #scontext = dot([sattn, sencout], axes=[2, 1])
         ast_context = dot([ast_attn, seout], axes=[2, 1])
 
-        sdatconv1 = Conv2D(self.filters, self.kern, activation='relu')
-        sdatconv1 = sdatconv1(sdat_input)
-        sdatconv1 = MaxPooling2D(pool_size=self.pool)(sdatconv1)
+        semb = TimeDistributed(tdel)
+        sde = semb(sdat_input)
+        
+        senc = TimeDistributed(CuDNNGRU(int(self.recdims/2)))
+        senc = senc(sde)
+        
+        scontext = Flatten()(senc)
+
+        #sdatconv1 = Conv2D(self.filters, self.kern, activation='relu')
+        #sdatconv1 = sdatconv1(sdat_input)
+        #sdatconv1 = MaxPooling2D(pool_size=self.pool)(sdatconv1)
 
         #sdatconv2 = Conv2D(self.filters*2, self.kern, activation='relu')
         #sdatconv2 = sdatconv2(sdatconv1)
         #sdatconv2 = MaxPooling2D(pool_size=self.kern)(sdatconv2)
 
-        scontext = Flatten()(sdatconv1)
+        #scontext = Flatten()(sdatconv1)
         #scontext = Dense(self.tdddims)(scontext)
         #out2 = Dense(self.comvocabsize, activation="softmax")(scontext)
         scontext = RepeatVector(self.comlen)(scontext)
