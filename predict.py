@@ -183,6 +183,7 @@ if __name__ == '__main__':
     modeltype = modeltype.split('/')[-1]
     config = pickle.load(open(outdir+'/histories/'+modeltype+'_conf_'+timestart+'.pkl', 'rb'))
     num_inputs = config['num_input']
+    print(config)
     drop()
 
     prep('loading model...')
