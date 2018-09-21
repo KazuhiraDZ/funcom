@@ -118,7 +118,7 @@ class Cmc3Model:
         out = Flatten()(out)
         #out = concatenate([seout, out])
         #out = Dense(2048, activation='relu')(out)
-        out1 = Dense(self.comvocabsize, activation="softmax", name="final_out")(out)
+        out1 = Dense(self.comvocabsize, activation="softmax")(out)
         
         model = Model(inputs=[tdat_input, sdat_input, com_input, sml_input], outputs=out1)
         #model = Model(inputs=[tdat_input, sdat_input, com_input, sml_input], outputs=[out1, out2])

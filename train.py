@@ -29,12 +29,12 @@ from nltk.translate.bleu_score import corpus_bleu, sentence_bleu
 
 class HistoryCallback(Callback):
     
-    def setCatchExit(self, outdir, modeltype, timestart, config):
+    def setCatchExit(self, outdir, modeltype, timestart, mdlconfig):
         self.outdir = outdir
         self.modeltype = modeltype
         self.history = {}
         self.timestart = timestart
-        self.config = config
+        self.mdlconfig = mdlconfig
         
         atexit.register(self.handle_exit)
         signal.signal(signal.SIGTERM, self.handle_exit)
@@ -50,7 +50,7 @@ class HistoryCallback(Callback):
                 
                 fn = outdir+'/histories/'+self.modeltype+'_conf_'+str(self.timestart)+'.pkl'
                 confoutfd = open(fn, 'wb')
-                pickle.dump(self.config, confoutfd)
+                pickle.dump(self.mdlconfig, confoutfd)
                 print('saved config to: ' + fn)
             except Exception as ex:
                 print(ex)
@@ -198,7 +198,9 @@ if __name__ == '__main__':
     drop()
 
     steps = int(len(seqdata['ctrain'])/batch_size)+1
+    #steps = 1
     valsteps = int(len(seqdata['cval'])/100)+1
+    #valsteps = 1
     
     tdatvocabsize = tdatstok.vocab_size
     comvocabsize = comstok.vocab_size
