@@ -38,7 +38,7 @@ def top3(y1, y2):
 def top5(y1, y2):
     return metrics.top_k_categorical_accuracy(y1, y2, k=5)
 
-def gendescr_2inp(model, data, comstok, comlen, batchsize, strat='greedy'):
+def gendescr_2inp(model, data, comstok, comlen, batchsize, config, strat='greedy'):
     # right now, only greedy search is supported...
     
     tdats, coms = list(zip(*data.values()))
@@ -177,6 +177,13 @@ if __name__ == '__main__':
     comlen = len(seqdata['ctest'][list(seqdata['ctest'].keys())[0]])
     smllen = len(seqdata['stest'][list(seqdata['stest'].keys())[0]])
 
+    prep('loading config...')
+    (modeltype, mid, timestart) = modelfile.split('_')
+    (timestart, ext) = timestart.split('.')
+    config = pickle.load(open(outdir+'/histories/'+modeltype+'_conf_'+timestart+'.pkl', 'rb'))
+    num_inputs = config['num_input']
+    drop()
+
     prep('loading model...')
     model = keras.models.load_model(modelfile, custom_objects={'top2': top2, 'top3': top3, 'top5':top5})
     drop()
@@ -196,7 +203,9 @@ if __name__ == '__main__':
         for fid in fid_set:
             dat = seqdata['dttest'][fid]
             sml = seqdata['stest'][fid]
-             # should be fixed size anyway
+            
+            # adjust to model's expected data size
+            dat = dat[:config['tdatlen']]
 
             if num_inputs == 2:
                 batch[fid] = np.asarray([dat, comstart])
@@ -209,12 +218,15 @@ if __name__ == '__main__':
                 print('error: invalid number of inputs specified')
                 sys.exit()
 
-        if num_inputs == 4:
-            batch_results = gendescr_4inp(model, batch, comstok, comlen, batchsize, strat='greedy')
-        elif num_inputs == 3:
-            batch_results = gendescr_3inp(model, batch, comstok, comlen, batchsize, strat='greedy')
+        if num_inputs == 2:
+            batch_results = gendescr_2inp(model, batch, comstok, comlen, batchsize, config, strat='greedy')
+        if num_inputs == 3:
+            batch_results = gendescr_3inp(model, batch, comstok, comlen, batchsize, config, strat='greedy')
+        elif num_inputs == 4:
+            batch_results = gendescr_4inp(model, batch, comstok, comlen, batchsize, config, strat='greedy')
         else:
-            batch_results = gendescr_2inp(model, batch, comstok, comlen, batchsize, strat='greedy')
+            print('error: invalid number of inputs specified')
+            sys.exit()
 
         for key, val in batch_results.items():
             outf.write("{}\t{}\n".format(key, val))
