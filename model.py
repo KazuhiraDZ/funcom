@@ -7,6 +7,7 @@ import tensorflow as tf
 from models.attendgru import AttentionGRUModel
 from models.ast_attendgru_xtra import AstAttentionGRUModel as xtra
 from models.cmc3 import Cmc3Model as cmc3
+from models.cmc4 import Cmc4Model as cmc4
 
 def create_model(modeltype, config):
     mdl = None
@@ -20,6 +21,9 @@ def create_model(modeltype, config):
     elif modeltype == 'cmc3':
     	# sandbox model to try things
         mdl = cmc3(config)
+    elif modeltype == 'cmc4':
+        # sandbox model to try things
+        mdl = cmc4(config)
     else:
         print("{} is not a valid model type".format(modeltype))
         exit(1)
