@@ -155,7 +155,7 @@ class batch_gen(keras.utils.Sequence):
             # if(len(wdatseq)<100):
             #     continue
 
-            wtdatseq = wtdatseq[:self.config['tdatlen']]
+            wdatseq = wdatseq[:self.config['tdatlen']]
 
             for i in range(0, len(wcomseq)):
                 datseqs.append(wdatseq)
@@ -217,9 +217,9 @@ class batch_gen(keras.utils.Sequence):
                 newlen = 0
             wsdatseq = wsdatseq.tolist()
             for k in range(newlen):
-                wsdatseq.append(np.zeros(self.config['tdatlen']))
+                wsdatseq.append(np.zeros(self.config['stdatlen']))
             for i in range(0, len(wsdatseq)):
-                wsdatseq[i] = np.array(wsdatseq[i])[:self.config['tdatlen']]
+                wsdatseq[i] = np.array(wsdatseq[i])[:self.config['stdatlen']]
             wsdatseq = np.asarray(wsdatseq)
             #if fid == 20988417:
             #    print(wsdatseq)

@@ -56,7 +56,7 @@ def gendescr_2inp(model, data, comstok, comlen, batchsize, config, strat='greedy
 
     return final_data
 
-def gendescr_3inp(model, data, comstok, comlen, batchsize, strat='greedy'):
+def gendescr_3inp(model, data, comstok, comlen, batchsize, config, strat='greedy'):
     # right now, only greedy search is supported...
     
     tdats, coms, smls = list(zip(*data.values()))
@@ -75,14 +75,16 @@ def gendescr_3inp(model, data, comstok, comlen, batchsize, strat='greedy'):
 
     return final_data
 
-def gendescr_4inp(model, data, comstok, comlen, batchsize, strat='greedy'):
+def gendescr_4inp(model, data, comstok, comlen, batchsize, config, strat='greedy'):
     # right now, only greedy search is supported...
 
-    tdats, sdats, coms, smls = list(zip(*data.values()))
+    tdats, sdats, coms, smls = zip(*data.values())
     tdats = np.array(tdats)
     sdats = np.array(sdats)
     coms = np.array(coms)
     smls = np.array(smls)
+
+    #print(sdats)
 
     for i in range(1, comlen):
         results = model.predict([tdats, sdats, coms, smls], batch_size=batchsize)
@@ -177,17 +179,17 @@ if __name__ == '__main__':
     comlen = len(seqdata['ctest'][list(seqdata['ctest'].keys())[0]])
     smllen = len(seqdata['stest'][list(seqdata['stest'].keys())[0]])
 
-    prep('loading config...')
+    prep('loading config... ')
     (modeltype, mid, timestart) = modelfile.split('_')
     (timestart, ext) = timestart.split('.')
     modeltype = modeltype.split('/')[-1]
     config = pickle.load(open(outdir+'/histories/'+modeltype+'_conf_'+timestart+'.pkl', 'rb'))
     num_inputs = config['num_input']
-    print(config)
     drop()
 
-    prep('loading model...')
+    prep('loading model... ')
     model = keras.models.load_model(modelfile, custom_objects={'top2': top2, 'top3': top3, 'top5':top5})
+    print(model.summary())
     drop()
 
     comstart = np.zeros(comlen)
@@ -214,7 +216,18 @@ if __name__ == '__main__':
             elif num_inputs == 3:
                 batch[fid] = np.asarray([dat, comstart, sml])
             elif num_inputs == 4:
-                sdat = seqdata['dstest'][fid]
+                sdat = seqdata['dstest'][fid][:config['sdatlen']]
+
+                newsdat = list()
+                for itm in sdat:
+                    a = np.array(itm[:config['stdatlen']])
+                    newsdat.append(a)
+
+                newlen = config['sdatlen']-len(sdat)
+                for k in range(newlen):
+                    newsdat.append(np.zeros(config['stdatlen']))
+
+                sdat = np.array(newsdat)
                 batch[fid] = np.asarray([dat, sdat, comstart, sml])
             else:
                 print('error: invalid number of inputs specified')

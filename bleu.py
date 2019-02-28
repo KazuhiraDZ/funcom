@@ -1,6 +1,8 @@
 import sys
 import pickle
 import argparse
+import re
+import MySQLdb
 
 from nltk.translate.bleu_score import corpus_bleu, sentence_bleu
 
@@ -35,6 +37,17 @@ def bleu_so_far(refs, preds):
     ret += ('B4 %s\n' % (B4))
     
     return ret
+
+def re_0002(i):
+    # split camel case and remove special characters
+    tmp = i.group(0)
+    if len(tmp) > 1:
+        if tmp.startswith(' '):
+            return tmp
+        else:
+            return '{} {}'.format(tmp[0], tmp[1])
+    else:
+        return ' '.format(tmp)
 
 if __name__ == '__main__':
 
@@ -82,6 +95,9 @@ if __name__ == '__main__':
     predicts.close()
     drop()
 
+    db = MySQLdb.connect(host='localhost', user='ports_20k', passwd='s3m3rU', db='sourcerer')
+    cur = db.cursor()
+    re_0001_ = re.compile(r'([^a-zA-Z0-9 ])|([a-z0-9_][A-Z])')
 
     refs = list()
     newpreds = list()
@@ -92,6 +108,24 @@ if __name__ == '__main__':
         fid = int(fid)
         com = com.split()
         com = fil(com)
+
+        #q = 'select name from functionalunits where id='+str(fid)
+        #cur.execute(q)
+        #for tname in cur.fetchall():
+        #    fname = re_0001_.sub(re_0002, str(tname))
+        #    fname = fname.lower()
+        #    fname = fname.rstrip()
+        #    fname = fname.lstrip()
+
+        #print(fname, com)
+
+        #c = 0
+        #for word in fname.split(' '):
+        #    if word in com:
+        #        c += 1
+        #print(fname, com, c, len(fname.split(' ')))
+        #if (c / len(fname.split(' '))) >= 0.5:
+        #    continue
 
         try:
             newpreds.append(preds[fid])
