@@ -6,7 +6,7 @@ import keras
 import keras.utils
 import tensorflow as tf
 
-# identical to cmc5 model except with different config parameters
+# identical to cmc7 model except ast not used
 
 class Cmc8Model:
     def __init__(self, config):

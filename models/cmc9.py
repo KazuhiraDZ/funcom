@@ -6,7 +6,7 @@ import keras
 import keras.utils
 import tensorflow as tf
 
-# identical to cmc7 model except with unified dat/com embedding
+# identical to cmc7 model
 
 class Cmc9Model:
     def __init__(self, config):
@@ -52,8 +52,7 @@ class Cmc9Model:
         tenc = CuDNNGRU(self.recdims, return_state=True, return_sequences=True)
         tencout, tstate_h = tenc(tde, initial_state=state_sml)
         
-        #de = Embedding(output_dim=self.embdims, input_dim=self.comvocabsize, mask_zero=False)(com_input)
-        de = tdel(com_input)
+        de = Embedding(output_dim=self.embdims, input_dim=self.comvocabsize, mask_zero=False)(com_input)
         dec = CuDNNGRU(self.recdims, return_sequences=True)
         decout = dec(de, initial_state=tstate_h)
 
