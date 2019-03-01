@@ -6,13 +6,15 @@ import keras
 import keras.utils
 import tensorflow as tf
 
-class Cmc5Model:
+# identical to cmc5 model except with different config parameters
+
+class Cmc8Model:
     def __init__(self, config):
         
         # data length in dataset is 20+ functions per file, but we can elect to reduce
         # that length here, since myutils reads this length when creating the batches
         config['sdatlen'] = 10
-        config['stdatlen'] = 25
+        config['stdatlen'] = 30
         
         config['tdatlen'] = 50
         
@@ -42,13 +44,9 @@ class Cmc5Model:
         
         tdel = Embedding(output_dim=self.embdims, input_dim=self.tdatvocabsize, mask_zero=False)
         tde = tdel(tdat_input)
-        se = Embedding(output_dim=self.smldims, input_dim=self.smlvocabsize, mask_zero=False)(sml_input)
-
-        se_enc = CuDNNGRU(self.recdims, return_state=True, return_sequences=True)
-        seout, state_sml = se_enc(se)
 
         tenc = CuDNNGRU(self.recdims, return_state=True, return_sequences=True)
-        tencout, tstate_h = tenc(tde, initial_state=state_sml)
+        tencout, tstate_h = tenc(tde)
         
         de = Embedding(output_dim=self.embdims, input_dim=self.comvocabsize, mask_zero=False)(com_input)
         dec = CuDNNGRU(self.recdims, return_sequences=True)
@@ -57,11 +55,7 @@ class Cmc5Model:
         tattn = dot([decout, tencout], axes=[2, 2])
         tattn = Activation('softmax')(tattn)
 
-        ast_attn = dot([decout, seout], axes=[2, 2])
-        ast_attn = Activation('softmax')(ast_attn)
-
         tcontext = dot([tattn, tencout], axes=[2, 1])
-        ast_context = dot([ast_attn, seout], axes=[2, 1])
 
         semb = TimeDistributed(tdel)
         sde = semb(sdat_input)
@@ -74,7 +68,7 @@ class Cmc5Model:
 
         scontext = dot([sattn, senc], axes=[2, 1])
 
-        context = concatenate([scontext, tcontext, decout, ast_context])
+        context = concatenate([scontext, tcontext, decout])
 
         out = TimeDistributed(Dense(self.tdddims, activation="relu"))(context)
 

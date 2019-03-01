@@ -36,8 +36,8 @@ class TransformerModel:
 
     def create_model(self):
         
-        dat_input = Input(shape=(self.datlen,))
-        com_input = Input(shape=(self.comlen,))
+        #dat_input = Input(shape=(self.datlen,))
+        #com_input = Input(shape=(self.comlen,))
 
 #        trans = Transformer(self.tdatvocabsize, self.comvocabsize, len_limit=70, d_model=512, d_inner_hid=512, \
 #            n_head=8, d_k=64, d_v=64, layers=2, dropout=0.1)
@@ -46,7 +46,7 @@ class TransformerModel:
 #        trans.compile(optimizer=optimizer)
 
         model = get_model(
-                    token_num=self.tdatvocabsize,
+                    token_num=[self.tdatvocabsize, self.comvocabsize],
                     embed_dim=30,
                     encoder_num=3,
                     decoder_num=2,
@@ -55,7 +55,10 @@ class TransformerModel:
                     attention_activation='relu',
                     feed_forward_activation='relu',
                     dropout_rate=0.05,
-                    embed_weights=np.random.random((self.tdatvocabsize, 30)),
+                    use_same_embed=False,
+                    embed_weights=[np.random.random((self.tdatvocabsize, 30)),
+                                   np.random.random((self.comvocabsize, 30))],
+                    embed_trainable=[True,True],
                 )
 
         model.compile(

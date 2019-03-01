@@ -6,13 +6,15 @@ import keras
 import keras.utils
 import tensorflow as tf
 
-class Cmc5Model:
+# identical to cmc5 model except with different config parameters
+
+class Cmc7Model:
     def __init__(self, config):
         
         # data length in dataset is 20+ functions per file, but we can elect to reduce
         # that length here, since myutils reads this length when creating the batches
         config['sdatlen'] = 10
-        config['stdatlen'] = 25
+        config['stdatlen'] = 30
         
         config['tdatlen'] = 50
         

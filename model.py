@@ -10,7 +10,8 @@ from models.transformer import TransformerModel
 from models.cmc3 import Cmc3Model as cmc3
 from models.cmc4 import Cmc4Model as cmc4
 from models.cmc5 import Cmc5Model as cmc5
-
+from models.cmc7 import Cmc7Model as cmc7
+from models.cmc8 import Cmc8Model as cmc8
 
 def create_model(modeltype, config):
     mdl = None
@@ -30,6 +31,12 @@ def create_model(modeltype, config):
     elif modeltype == 'cmc5':
         # sandbox model to try things
         mdl = cmc5(config)
+    elif modeltype == 'cmc7':
+        # sandbox model to try things
+        mdl = cmc7(config)
+    elif modeltype == 'cmc8':
+        # sandbox model to try things
+        mdl = cmc8(config)
     elif modeltype == 'transformer':
         # sandbox model to try things
         mdl = TransformerModel(config)

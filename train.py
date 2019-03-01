@@ -23,7 +23,7 @@ from keras.backend.tensorflow_backend import set_session
 from keras.callbacks import ModelCheckpoint, LambdaCallback, Callback
 import keras.backend as K
 from model import create_model
-from myutils import prep, drop, batch_gen, init_tf, batch_gen_train_bleu, seq2sent
+from myutils import prep, drop, batch_gen, init_tf, seq2sent
 from nltk.translate.bleu_score import corpus_bleu, sentence_bleu
 
 
@@ -66,92 +66,6 @@ class HistoryCallback(Callback):
         self.epoch.append(epoch)
         for k, v in logs.items():
             self.history.setdefault(k, []).append(v)
-
-
-class mycallback(Callback):
-    def __init__(self, val, steps):
-        self.valgen = val
-        self.refs = {}
-        self.get_true()
-        self.val_bleu = {}
-        self.steps = steps
-
-    def on_train_begin(self, logs={}):
-        return
-
-    def on_train_end(self, logs={}):
-        return
- 
-    def on_epoch_begin(self, epoch, logs={}):
-        return
- 
-    def on_epoch_end(self, epoch, logs={}):
-        valdata = []
-        data = []
-        test_batch = random.randint(0, self.steps)
-        fidlist, data = self.valgen[test_batch]
-
-        data = data[0]
-        batch_size = len(data)
-        dats = np.array(data[0])
-        comlen = len(data[1][0])
-        comstart = np.zeros(comlen)
-        st = comstok.w2i['<s>']
-        comstart[0] = st
-        coms = np.array([comstart for x in range(len(dats))])
-        smls = np.array(data[2])
-        for i in range(1, comlen):
-            results = model.predict([dats, coms, smls], batch_size=batch_size)
-            for c, s in enumerate(results):
-                coms[c][i] = np.argmax(s)
-
-        preds = []
-        refs = []
-        for fid, com in zip(fidlist, coms):
-            pred = self.fil(seq2sent(com, comstok).split())
-            if len(pred) == 0:
-                continue
-
-            try:
-                refs.append(self.refs[int(fid)])
-            except KeyError:
-                continue
-            preds.append(pred)
-        self.val_bleu[epoch] = self.bleu_so_far(refs, preds)
-        logs['val_bleu'] = self.val_bleu[epoch]
-        print("val_bleu: {}".format(self.val_bleu[epoch]))
-
-    def on_batch_begin(self, batch, logs={}):
-        return
- 
-    def on_batch_end(self, batch, logs={}):
-        return
-
-    def get_true(self):
-        targets = open('../data/makedataset/output/coms.test', 'r')
-        for line in targets:
-            (fid, com) = line.split(',')
-            fid = int(fid)
-            com = com.split()
-            com = self.fil(com)
-            
-            self.refs[fid] = com
-
-    def fil(self, com):
-        ret = list()
-        for w in com:
-            if not '<' in w:
-                ret.append(w)
-        return ret
-
-    def bleu_so_far(self, refs, preds):
-
-        try:
-            Ba = corpus_bleu(refs, preds)
-        except ZeroDivisionError:
-            Ba = 0.0
-        Ba = round(Ba * 100, 2)
-        return Ba
 
 
 if __name__ == '__main__':
