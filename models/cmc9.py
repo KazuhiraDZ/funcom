@@ -8,7 +8,7 @@ import tensorflow as tf
 
 # identical to cmc7 model except with unified dat/com embedding
 
-class Cmc7Model:
+class Cmc9Model:
     def __init__(self, config):
         
         # data length in dataset is 20+ functions per file, but we can elect to reduce
