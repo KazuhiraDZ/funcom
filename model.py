@@ -12,6 +12,7 @@ from models.cmc4 import Cmc4Model as cmc4
 from models.cmc5 import Cmc5Model as cmc5
 from models.cmc7 import Cmc7Model as cmc7
 from models.cmc8 import Cmc8Model as cmc8
+from models.cmc9 import Cmc9Model as cmc9
 
 def create_model(modeltype, config):
     mdl = None
@@ -37,6 +38,9 @@ def create_model(modeltype, config):
     elif modeltype == 'cmc8':
         # sandbox model to try things
         mdl = cmc8(config)
+    elif modeltype == 'cmc9':
+        # sandbox model to try things
+        mdl = cmc9(config)
     elif modeltype == 'transformer':
         # sandbox model to try things
         mdl = TransformerModel(config)
