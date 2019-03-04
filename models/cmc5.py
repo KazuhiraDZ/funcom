@@ -15,6 +15,9 @@ class Cmc5Model:
         config['stdatlen'] = 25
         
         config['tdatlen'] = 50
+
+        config['smllen'] = 100
+        config['3dsmls'] = False
         
         self.config = config
         self.tdatvocabsize = config['tdatvocabsize']

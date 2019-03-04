@@ -231,6 +231,8 @@ class batch_gen(keras.utils.Sequence):
             wsdatseq = wsdatseq[:self.config['sdatlen'],:]
             #wsdatseq = wsdatseq[:,:,None]
 
+            wsmlseq = wsmlseq[:self.config['smllen']]
+
             for i in range(0, len(wcomseq)):
                 tdatseqs.append(wtdatseq)
                 sdatseqs.append(wsdatseq)

@@ -15,6 +15,7 @@ from models.cmc8 import Cmc8Model as cmc8
 from models.cmc9 import Cmc9Model as cmc9
 from models.cmc10 import Cmc10Model as cmc10
 from models.cmc11 import Cmc11Model as cmc11
+from models.cmc12 import Cmc12Model as cmc12
 
 def create_model(modeltype, config):
     mdl = None
@@ -25,28 +26,9 @@ def create_model(modeltype, config):
     elif modeltype == 'ast-attendgru':
     	# attention GRU model with added AST information from srcml. 
         mdl = xtra(config)
-    elif modeltype == 'cmc3':
-    	# sandbox model to try things
-        mdl = cmc3(config)
-    elif modeltype == 'cmc4':
-        # sandbox model to try things
-        mdl = cmc4(config)
     elif modeltype == 'cmc5':
         # sandbox model to try things
         mdl = cmc5(config)
-    elif modeltype == 'cmc7':
-        # sandbox model to try things
-        mdl = cmc7(config)
-    elif modeltype == 'cmc8':
-        # sandbox model to try things
-        mdl = cmc8(config)
-    elif modeltype == 'cmc9':
-        # sandbox model to try things
-        mdl = cmc9(config)
-    elif modeltype == 'cmc10':
-        mdl = cmc10(config)
-    elif modeltype == 'cmc11':
-        mdl = cmc11(config)
     elif modeltype == 'transformer':
         # sandbox model to try things
         mdl = TransformerModel(config)

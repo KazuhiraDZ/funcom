@@ -210,6 +210,7 @@ if __name__ == '__main__':
             
             # adjust to model's expected data size
             dat = dat[:config['tdatlen']]
+            sml = sml[:config['smllen']]
 
             if num_inputs == 2:
                 batch[fid] = np.asarray([dat, comstart])
