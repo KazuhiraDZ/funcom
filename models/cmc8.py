@@ -1,14 +1,12 @@
 from keras.models import Model
-from keras.layers import Input, Maximum, Dense, Embedding, Reshape, GRU, merge, LSTM, Dropout, BatchNormalization, Activation, concatenate, multiply, MaxPooling1D, MaxPooling2D, Conv1D, Conv2D, Flatten, Bidirectional, CuDNNGRU, RepeatVector, Permute, TimeDistributed, dot, Lambda
-from keras.backend import tile, repeat, repeat_elements, squeeze, transpose
+from keras.layers import Input, Maximum, Dense, Embedding, Reshape, GRU, merge, LSTM, Dropout, BatchNormalization, Activation, concatenate, multiply, MaxPooling1D, MaxPooling2D, Conv1D, Conv2D, Flatten, Bidirectional, CuDNNGRU, RepeatVector, Permute, TimeDistributed, dot
+from keras.backend import tile, repeat, repeat_elements
 from keras.optimizers import RMSprop, Adamax
 import keras
 import keras.utils
 import tensorflow as tf
 
-# identical to cmc5 except that tdats are attended to sdats
-
-class Cmc6Model:
+class Cmc8Model:
     def __init__(self, config):
         
         # data length in dataset is 20+ functions per file, but we can elect to reduce
@@ -56,15 +54,16 @@ class Cmc6Model:
         tencout, tstate_h = tenc(tde, initial_state=state_sml)
         
         de = Embedding(output_dim=self.embdims, input_dim=self.comvocabsize, mask_zero=False)(com_input)
-        dec = CuDNNGRU(self.recdims, return_state=True, return_sequences=True)
-        decout, dstate_h = dec(de, initial_state=tstate_h)
+        dec = CuDNNGRU(self.recdims, return_sequences=True)
+        decout = dec(de, initial_state=tstate_h)
 
         tattn = dot([decout, tencout], axes=[2, 2])
         tattn = Activation('softmax')(tattn)
-        tcontext = dot([tattn, tencout], axes=[2, 1])
 
         ast_attn = dot([decout, seout], axes=[2, 2])
         ast_attn = Activation('softmax')(ast_attn)
+
+        tcontext = dot([tattn, tencout], axes=[2, 1])
         ast_context = dot([ast_attn, seout], axes=[2, 1])
 
         semb = TimeDistributed(tdel)
@@ -73,28 +72,10 @@ class Cmc6Model:
         senc = TimeDistributed(CuDNNGRU(int(self.recdims)))
         senc = senc(sde)
 
-        dstate_h = RepeatVector(1)(dstate_h)
-        stattn = dot([dstate_h, senc], axes=[2, 2], normalize=True)
-        stattn = Lambda(lambda x: squeeze(x, 1))(stattn)
-        stattn = RepeatVector(self.recdims)(stattn)
-        stattn = Permute((2, 1), input_shape=(self.config['sdatlen'], self.config['sdatlen']))(stattn)
-        scontext = multiply([stattn, senc])
+        sattn = dot([decout, senc], axes=[2, 2])
+        sattn = Activation('softmax')(sattn)
 
-        #dstate_h = RepeatVector(1)(dstate_h)
-        #stattn = dot([dstate_h, senc], axes=[2, 2], normalize=True)
-        #stattn = Activation('softmax')(stattn)
-        #scontext = dot([stattn, senc], axes=[2, 1])
-        
-        # attend senc to tencout: this is applied prior to attention by coms
-        #stattn = dot([tencout, senc], axes=[2, 2])
-        ##stattn = Activation('softmax')(stattn)
-        #scontext = dot([stattn, senc], axes=[2, 1])
-
-        # additional attention layer for sdats to coms, applied after attention to tdats
-        #sattn = dot([decout, scontext], axes=[2, 2])
-        #sattn = Activation('softmax')(sattn)
-        #scontext = dot([sattn, scontext], axes=[2, 1])
-        
+        scontext = dot([sattn, senc], axes=[2, 1])
 
         context = concatenate([scontext, tcontext, decout, ast_context], axis=1)
 

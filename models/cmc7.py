@@ -1,14 +1,14 @@
 from keras.models import Model
-from keras.layers import Input, Maximum, Dense, Embedding, Reshape, GRU, merge, LSTM, Dropout, BatchNormalization, Activation, concatenate, multiply, MaxPooling1D, MaxPooling2D, Conv1D, Conv2D, Flatten, Bidirectional, CuDNNGRU, RepeatVector, Permute, TimeDistributed, dot, Lambda
-from keras.backend import tile, repeat, repeat_elements, squeeze, transpose
+from keras.layers import Input, Maximum, Dense, Embedding, Reshape, GRU, merge, LSTM, Dropout, BatchNormalization, Activation, concatenate, multiply, MaxPooling1D, MaxPooling2D, Conv1D, Conv2D, Flatten, Bidirectional, CuDNNGRU, RepeatVector, Permute, TimeDistributed, dot
+from keras.backend import tile, repeat, repeat_elements
 from keras.optimizers import RMSprop, Adamax
 import keras
 import keras.utils
 import tensorflow as tf
 
-# identical to cmc5 except that tdats are attended to sdats
+# identical to cmc6 except experimental differences
 
-class Cmc6Model:
+class Cmc7Model:
     def __init__(self, config):
         
         # data length in dataset is 20+ functions per file, but we can elect to reduce
@@ -73,18 +73,17 @@ class Cmc6Model:
         senc = TimeDistributed(CuDNNGRU(int(self.recdims)))
         senc = senc(sde)
 
-        dstate_h = RepeatVector(1)(dstate_h)
-        stattn = dot([dstate_h, senc], axes=[2, 2], normalize=True)
-        stattn = Lambda(lambda x: squeeze(x, 1))(stattn)
-        stattn = RepeatVector(self.recdims)(stattn)
-        stattn = Permute((2, 1), input_shape=(self.config['sdatlen'], self.config['sdatlen']))(stattn)
-        scontext = multiply([stattn, senc])
+        dstate_expand = RepeatVector(self.config['sdatlen'])(dstate_h)
+        stattn = dot([dstate_expand, senc], axes=[2, 2])
+        stattn = Activation('softmax')(stattn)
+        scontext = dot([stattn, senc], axes=[2, 1])
 
+        # SHOULD be the same result as above, but faster...
         #dstate_h = RepeatVector(1)(dstate_h)
         #stattn = dot([dstate_h, senc], axes=[2, 2], normalize=True)
         #stattn = Activation('softmax')(stattn)
         #scontext = dot([stattn, senc], axes=[2, 1])
-        
+
         # attend senc to tencout: this is applied prior to attention by coms
         #stattn = dot([tencout, senc], axes=[2, 2])
         ##stattn = Activation('softmax')(stattn)
