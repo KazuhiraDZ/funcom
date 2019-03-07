@@ -76,7 +76,7 @@ class Cmc10Model:
         dstate_h = RepeatVector(1)(dstate_h)
         stattn = dot([dstate_h, senc], axes=[2, 2])
         stattn = Activation('softmax')(stattn)
-        stattn = Lambda(lambda x: squeeze(x, 1))(stattn)
+        stattn = Lambda(lambda x: keras.backend.squeeze(x, 1))(stattn)
         stattn = RepeatVector(self.recdims)(stattn)
         stattn = Permute((2, 1), input_shape=(self.config['sdatlen'], self.config['sdatlen']))(stattn)
         scontext = multiply([stattn, senc])

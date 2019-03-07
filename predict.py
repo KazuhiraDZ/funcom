@@ -188,7 +188,7 @@ if __name__ == '__main__':
     drop()
 
     prep('loading model... ')
-    model = keras.models.load_model(modelfile, custom_objects={'top2': top2, 'top3': top3, 'top5':top5})
+    model = keras.models.load_model(modelfile, custom_objects={'top2': top2, 'top3': top3, 'top5':top5, "tf": tf})
     print(model.summary())
     drop()
 

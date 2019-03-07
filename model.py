@@ -1,5 +1,6 @@
 from keras.models import Model
 from keras.layers import Input, Dense, Embedding, Reshape, GRU, merge, LSTM, Dropout, BatchNormalization, Activation, concatenate, multiply, MaxPooling1D, Conv1D, Flatten
+from keras.backend import tile, repeat, repeat_elements, squeeze, transpose
 from keras.optimizers import RMSprop
 import keras
 import tensorflow as tf
