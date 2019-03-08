@@ -9,11 +9,6 @@ from models.attendgru import AttentionGRUModel
 from models.ast_attendgru_xtra import AstAttentionGRUModel as xtra
 from models.transformer import TransformerModel
 from models.cmc5 import Cmc5Model as cmc5
-from models.cmc6 import Cmc6Model as cmc6
-from models.cmc7 import Cmc7Model as cmc7
-from models.cmc8 import Cmc8Model as cmc8
-from models.cmc9 import Cmc9Model as cmc9
-from models.cmc10 import Cmc10Model as cmc10
 
 def create_model(modeltype, config):
     mdl = None
@@ -27,21 +22,6 @@ def create_model(modeltype, config):
     elif modeltype == 'cmc5':
         # sandbox model to try things
         mdl = cmc5(config)
-    elif modeltype == 'cmc6':
-        # sandbox model to try things
-        mdl = cmc6(config)
-    elif modeltype == 'cmc7':
-        # sandbox model to try things
-        mdl = cmc7(config)
-    elif modeltype == 'cmc8':
-        # sandbox model to try things
-        mdl = cmc8(config)
-    elif modeltype == 'cmc9':
-        # sandbox model to try things
-        mdl = cmc9(config)
-    elif modeltype == 'cmc10':
-        # sandbox model to try things
-        mdl = cmc10(config)
     elif modeltype == 'transformer':
         # sandbox model to try things
         mdl = TransformerModel(config)
